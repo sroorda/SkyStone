@@ -267,7 +267,7 @@ public class DriveUtility {
     private static final double START_SPEED = 0.1; // Ramping value
     private static final double AMOUNT_INCREASED = 0.1; // Ramping value
     private static final double STRAFE_FACTOR = 0.003; // How much correct for angle per check
-    private static final double BACK_POWER_CORRECT = 1.035; // Overall correction
+    private static final double BACK_POWER_CORRECT = 1.020; // Overall correction
 
     protected void runMotorsUntilPositionRampSpeed(double drive, double strafe, double rotate, boolean fullSpeed, double targetDistance ) {
 
@@ -339,9 +339,9 @@ public class DriveUtility {
 
     private void setMotorSpeeds(double speedFactor, double flPower, double blPower, double frPower, double brPower) {
         frontLeft.setPower(speedFactor * flPower);
-        backLeft.setPower(speedFactor * blPower);
+        backRight.setPower(speedFactor * blPower);
         frontRight.setPower(speedFactor * frPower);
-        backRight.setPower(speedFactor * brPower);
+        backLeft.setPower(speedFactor * brPower);
         //log("motor powers", frontLeft.getPower() + "," + backLeft.getPower() + "," + frontRight.getPower() + "," + backRight.getPower() );
     }
 
