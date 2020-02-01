@@ -99,25 +99,34 @@ public class Auto1StoneFoundationParkRed extends LinearOpMode {
 
             //rotate right to rotate foundation
             du.log("BEFORE", "Rotate right to rotate foundation");
-            du.rotateRight(1300, 0.3);
+            du.rotateRight(1500, 0.4);
             sleep(300);
 
             //move forward and push foundation against wall
             du.log("BEFORE", "Move forward and push foundation against wall");
             du.moveWithEncoder(100,SPEED);
 
-            //sleep(300);
+            //open the foundation claws so we let go of the foundation
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
             sleep(300);
+
+            //move backwards half way
             du.moveWithEncoder(-47.5, SPEED);
             du.log("Start Linear Slide", "");
-            du.strafeLeftDistance(17, SPEED, true);
+
+            //strafe left to park in the spot closest to the middle bridge
+            du.strafeLeftDistance(30, SPEED, true);
+
+            //back up the rest of the way
             du.moveWithEncoder(-47.5, SPEED);
+
+            //reset all of our mechanisms
             du.moveLinearSlideWithEncoders(-13);
             du.log("End Linear Slide", "");
             sleep(300);
             du.moveIntake(DriveUtility.CLAW_CLOSE);
             sleep(300);
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
 
 sleep(3000);
 

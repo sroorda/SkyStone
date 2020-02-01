@@ -267,7 +267,7 @@ public class DriveUtility {
     private static final double START_SPEED = 0.1; // Ramping value
     private static final double AMOUNT_INCREASED = 0.1; // Ramping value
     private static final double STRAFE_FACTOR = 0.003; // How much correct for angle per check
-    private static final double BACK_POWER_CORRECT = 1.020; // Overall correction
+    private static final double BACK_POWER_CORRECT = 1.025; // Overall correction
 
     protected void runMotorsUntilPositionRampSpeed(double drive, double strafe, double rotate, boolean fullSpeed, double targetDistance ) {
 
