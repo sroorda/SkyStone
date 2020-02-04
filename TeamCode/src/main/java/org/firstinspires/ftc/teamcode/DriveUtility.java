@@ -23,6 +23,16 @@ public class DriveUtility {
     public final static int FOUNDATION_CLAW_OPEN = 0;
     public final static int FOUNDATION_CLAW_CLOSE = 1;
 
+    public final static double STRAFE_LEFT_BACK_POWER = 1.0085;
+    public final static double STRAFE_RIGHT_BACK_POWER = 1.025;
+
+    public final static double STRAFE_LEFT_ANGLE_CORRECT = 0.001;
+    public final static double STRAFE_RIGHT_ANGLE_CORRECT = 0.003;
+
+    public final static int STATE_MOVE = 0;
+    public final static int STATE_STRAFE_LEFT = 1;
+    public final static int STATE_STRAFE_RIGHT = 2;
+
     public static double TICKS_PER_CM = 17.1;
     public static double LINEAR_TICKS_PER_CM = 45;
 
@@ -117,7 +127,7 @@ public class DriveUtility {
         frontRight.setTargetPosition(roundedDistance);
         
         
-        runMotorsUntilPositionRampSpeed(speed, 0, 0, fullSpeed, roundedDistance);
+        runMotorsUntilPositionRampSpeed(speed, 0, 0, fullSpeed, roundedDistance, STATE_MOVE);
     }
 
     public void strafeRightDistance(double distance, double speed) {
@@ -128,6 +138,8 @@ public class DriveUtility {
         for(DcMotor m : motorList ) {
             m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            //m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         }
         int roundedDistance = (int)Math.round(distance * TICKS_PER_CM);
         int roundedFrontDistance = (int)Math.round(distance * TICKS_PER_CM);// * 0.975);
@@ -137,7 +149,7 @@ public class DriveUtility {
         //frontRight.setTargetPosition(roundedFrontDistance);
 
 
-        runMotorsUntilPositionRampSpeed(0, -speed, 0, fullSpeed, roundedDistance);
+        runMotorsUntilPositionRampSpeed(0, -speed, 0, fullSpeed, roundedDistance, STATE_STRAFE_RIGHT);
     }
 
     public void strafeLeftDistance(double distance, double speed) {
@@ -148,6 +160,8 @@ public class DriveUtility {
         for(DcMotor m : motorList ) {
             m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            //m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         }
         int roundedDistance = (int)Math.round(distance * TICKS_PER_CM);
         int roundedFrontDistance = (int)Math.round(distance * TICKS_PER_CM);//* 0.975);
@@ -156,7 +170,7 @@ public class DriveUtility {
         //backRight.setTargetPosition(roundedDistance);
         //frontRight.setTargetPosition(-roundedFrontDistance);
 
-        runMotorsUntilPositionRampSpeed(0, speed, 0, fullSpeed, roundedDistance);
+        runMotorsUntilPositionRampSpeed(0, speed, 0, fullSpeed, roundedDistance, STATE_STRAFE_LEFT);
     }
 
     public void rotateRight (long milliseconds, double rotate) {
@@ -259,17 +273,26 @@ public class DriveUtility {
 
     }
 
-    protected void runMotorsUntilPositionRampSpeed(double drive, double strafe, double rotate, double targetDistance ) {
-        runMotorsUntilPositionRampSpeed(drive, strafe, rotate, false, targetDistance);
-    }
+
 
     // RUN TO POSITION MAIN FUNCTION
     private static final double START_SPEED = 0.1; // Ramping value
     private static final double AMOUNT_INCREASED = 0.1; // Ramping value
-    private static final double STRAFE_FACTOR = 0.003; // How much correct for angle per check
-    private static final double BACK_POWER_CORRECT = 1.025; // Overall correction
+    //private static final double STRAFE_FACTOR = 0.001; //0.003; // How much correct for angle per check
+    //private static final double BACK_POWER_CORRECT = 1.0085;//1.025; // Overall correction
 
-    protected void runMotorsUntilPositionRampSpeed(double drive, double strafe, double rotate, boolean fullSpeed, double targetDistance ) {
+    protected void runMotorsUntilPositionRampSpeed(double drive, double strafe, double rotate, boolean fullSpeed, double targetDistance, int moveState) {
+        double angleCorrect = 1;
+        double backPowerCorrect = 1;
+
+        if (moveState == STATE_STRAFE_RIGHT) {
+            angleCorrect = STRAFE_RIGHT_ANGLE_CORRECT;
+            backPowerCorrect = STRAFE_RIGHT_BACK_POWER;
+        }
+        else if (moveState == STATE_STRAFE_LEFT ){
+            angleCorrect = STRAFE_LEFT_ANGLE_CORRECT;
+            backPowerCorrect = STRAFE_LEFT_BACK_POWER;
+        }
 
         //double flPower = -drive + strafe + rotate;
         //double blPower = -drive - strafe - rotate;
@@ -293,23 +316,34 @@ public class DriveUtility {
         while( opMode.opModeIsActive() && !reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight)) {
             double angle = getAngle();
 
-            if (angle > centerAngle) {
-                // increase the back wheel power and decrease the front wheel power
-                backCorrection = backCorrection * (1 - STRAFE_FACTOR);
-                frontCorrection = frontCorrection * (1 + STRAFE_FACTOR);
-
-            }
-            else if (angle < centerAngle){
-                // decrease the back wheel power and increase the front wheel power
-                backCorrection = backCorrection * (1 + STRAFE_FACTOR);
-                frontCorrection = frontCorrection * (1 - STRAFE_FACTOR);
+            if( moveState != STATE_MOVE ) {
+                if (angle > centerAngle) {
+                    // increase the back wheel power and decrease the front wheel power
+                    if (moveState == STATE_STRAFE_RIGHT) {
+                        backCorrection = backCorrection * (1 - angleCorrect);
+                        frontCorrection = frontCorrection * (1 + angleCorrect);
+                    } else if (moveState == STATE_STRAFE_LEFT ){
+                        backCorrection = backCorrection * (1 + angleCorrect);
+                        frontCorrection = frontCorrection * (1 - angleCorrect);
+                    }
+                } else if (angle < centerAngle) {
+                    // decrease the back wheel power and increase the front wheel power
+                    if (moveState == STATE_STRAFE_RIGHT) {
+                        backCorrection = backCorrection * (1 + angleCorrect);
+                        frontCorrection = frontCorrection * (1 - angleCorrect);
+                    } else if (moveState == STATE_STRAFE_LEFT){
+                        backCorrection = backCorrection * (1 - angleCorrect);
+                        frontCorrection = frontCorrection * (1 + angleCorrect);
+                    }
+                }
             }
             log("Angle", "" + angle);
             log("Correction value", backCorrection + ", " + frontCorrection);
             flPower = flPower * frontCorrection;
             frPower = frPower * frontCorrection;
-            brPower = brPower * backCorrection * BACK_POWER_CORRECT;
-            blPower = blPower * backCorrection * BACK_POWER_CORRECT;
+            brPower = brPower * backCorrection * backPowerCorrect;
+            blPower = blPower * backCorrection * backPowerCorrect;
+            log("power", blPower + ", " + flPower + ", " + brPower + ", " + frPower);
 
             if (speedFactor < 1){
                 speedFactor += AMOUNT_INCREASED;
@@ -323,8 +357,8 @@ public class DriveUtility {
             opMode.sleep(50);
             opMode.idle();
             //log("busy:", backLeft.isBusy() + "," + frontLeft.isBusy()+ "," + backRight.isBusy()+ "," + frontRight.isBusy());
-            log("position:", backLeft.getCurrentPosition() + "," + frontLeft.getCurrentPosition()+ "," + backRight.getCurrentPosition()+ "," + frontRight.getCurrentPosition() );
-            log("power:", backLeft.getPower() + "," + frontLeft.getPower()+ "," + backRight.getPower()+ "," + frontRight.getPower() );
+            //log("position:", backLeft.getCurrentPosition() + "," + frontLeft.getCurrentPosition()+ "," + backRight.getCurrentPosition()+ "," + frontRight.getCurrentPosition() );
+            //log("power:", backLeft.getPower() + "," + frontLeft.getPower()+ "," + backRight.getPower()+ "," + frontRight.getPower() );
             telemetry.update();
 
         }

@@ -50,23 +50,25 @@ public class Auto1StoneFoundationParkBlue extends LinearOpMode {
         if (opModeIsActive()) {
 
             // Move forward to line up with first block
+            du.log("BEFORE", "Move to Stone");
             du.moveWithEncoder(74, .3);
 
             // Drop the claw to move the block
             du.moveIntake(DriveUtility.CLAW_CLOSE);
             sleep(500);
-            du.log("Sleep","");
 
             // Move backwards
+            du.log("BEFORE", "Move Backwards");
             du.moveWithEncoder(-22, SPEED);
-            //sleep(300);
+            sleep(300);
 
             // Move linear slide to prevent stone from slipping
             du.moveLinearSlideWithEncoders(3);
-            //sleep(5000);
+            sleep(100);
 
             // Strafe towards foundation
-            du.strafeLeftDistance(195, 0.6);
+            du.log("BEFORE", "Strafe towards foundation");
+            du.strafeLeftDistance(170, 0.8);
             sleep(300);
 
             // Raise linear slide
@@ -74,7 +76,8 @@ public class Auto1StoneFoundationParkBlue extends LinearOpMode {
             sleep(300);
 
             // Move forward towards foundation
-            du.moveWithEncoder(37, SPEED);
+            du.log("BEFORE", "Move forward towards foundation");
+            du.moveWithEncoder(40, 0.5);
             //sleep(300);
 
             // Lower foundation claws to grab foundation
@@ -86,32 +89,45 @@ public class Auto1StoneFoundationParkBlue extends LinearOpMode {
             sleep(500);
 
             //rotate right slowly a little
+            du.log("BEFORE", "Rotate slowly a little");
             du.rotateLeft(500, 0.3);
 
             //move backwards to the wall
+            du.log("BEFORE", "Move backwards to wall");
             du.moveWithEncoder(-75, SPEED);
 
             //rotate right to rotate foundation
-            du.rotateLeft(1300, 0.3);
+            du.log("BEFORE", "Rotate right to rotate foundation");
+            du.rotateLeft(1500, 0.4);
             sleep(300);
 
             //move forward and push foundation against wall
+            du.log("BEFORE", "Move forward and push foundation against wall");
             du.moveWithEncoder(100,SPEED);
-            //sleep(300);
+
+            //open the foundation claws so we let go of the foundation
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
             sleep(300);
-            du.log("Strafe Right Begin", "");
-            du.strafeRightDistance(4, SPEED);
-            du.log("Strafe Right End", "");
-            du.moveWithEncoder(-95, SPEED);
+
+            //move backwards half way
+            du.moveWithEncoder(-47.5, SPEED);
             du.log("Start Linear Slide", "");
+
+            //strafe left to park in the spot closest to the middle bridge
+            du.strafeRightDistance(48, SPEED, true);
+
+            //back up the rest of the way
+            du.moveWithEncoder(-47.5, SPEED);
+
+            //reset all of our mechanisms
             du.moveLinearSlideWithEncoders(-13);
             du.log("End Linear Slide", "");
             sleep(300);
             du.moveIntake(DriveUtility.CLAW_CLOSE);
             sleep(300);
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
 
-
+            sleep(3000);
             telemetry.update();
 
         }

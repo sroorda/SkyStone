@@ -36,6 +36,8 @@ public class SkystoneTeleOp extends LinearOpMode {
     capstone = hardwareMap.servo.get("capstone");
 
     // Put initialization blocks here.
+
+    waitForStart();
     leftClaw.setPosition(1);
     intake.setPosition(0);
     isClawDown = true;

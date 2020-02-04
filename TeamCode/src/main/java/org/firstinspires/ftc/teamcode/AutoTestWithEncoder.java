@@ -73,17 +73,11 @@ public class AutoTestWithEncoder extends LinearOpMode {
 
         if (opModeIsActive()) {
 
-            du.strafeRightDistance(150, 0.9);
+            du.moveLinearSlideWithEncoders(15);
+            sleep(1500);
+            du.moveLinearSlideWithEncoders(-15);
+            sleep(5000);
 
-            //du.strafeRightDistance(244, 0.9);
-            //sleep(5000);
-            //du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
-            //sleep(500);
-            //du.rotateRight(1000, 0.6);
-            //du.moveWithEncoder(150);
-            //du.moveWithEncoder(-150);
-            //du.strafeLeftDistance(150);
-            //du.strafeRightDistance(150);
 
 
             telemetry.update();
