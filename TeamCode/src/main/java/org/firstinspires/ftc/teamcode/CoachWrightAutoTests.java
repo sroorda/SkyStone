@@ -29,248 +29,186 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-//import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-//import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-//import org.firstinspires.ftc.robotcore.external.navigation.Position;
-//import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-
+import java.util.List;
 
 
 @Autonomous(name="CoachWTests", group="Linear Opmode")
-@Disabled
+//@Disabled
 public class CoachWrightAutoTests extends LinearOpMode {
+
     public final static double SPEED = 0.75;
 
-    BNO055IMU imu;
-    Orientation             lastAngles = new Orientation();
-    double                  globalAngle, power = .30, correction;
-    public static double TICKS_PER_CM = 17.1;
+
+    private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
+    private static final String LABEL_FIRST_ELEMENT = "Stone";
+    private static final String LABEL_SECOND_ELEMENT = "Skystone";
+
+    /*
+     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
+     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
+     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
+     * web site at https://developer.vuforia.com/license-manager.
+     *
+     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
+     * random data. As an example, here is a example of a fragment of a valid key:
+     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
+     * Once you've obtained a license key, copy the string from the Vuforia web site
+     * and paste it in to your code on the next line, between the double quotes.
+     */
+    private static final String VUFORIA_KEY =
+            "Ac9/DqT/////AAABmWMwXGTjAUE3umMiPxGQDekSkHssqfs1px7rE0Lb51sJTncsz5jPFfDXlXFJTwO+kp17qkzL7FMszaUkQjDcril6zxU+QBCrl5oPMPOu6kHoc/5KEvqM31PG2/MIzMF4rIM9mQFw9f5Y20q13TcmDzA1RwDGdrmaGO8nv+2tid9PyfIv4s6GCdspdmSDLRq7shREVfC81Wli2bMoNI49kZNj3bydsSSIFoMBV+PX2FVvpnWkqQ2OjZiWR4h08/c1VdaiBqrN5AH1Lz5LYlM0Hr0M/ZCgQdC2rQVxNfBV1pY6XfzuTeYoksCFbUxrSBs9nvSwz4/0LPVIMmmvYS57kjgpDv0CvbQ5p/svOvuMNuvG";
+
+    /**
+     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
+     * localization engine.
+     */
+    private VuforiaLocalizer vuforia;
+
+    /**
+     * {@link #tfod} is the variable we will use to store our instance of the TensorFlow Object
+     * Detection engine.
+     */
+    private TFObjectDetector tfod;
 
     public void runOpMode() {
-        telemetry.addData("change number", 2);
-        telemetry.addData("Status", "Initialized v1");
+        telemetry.addData("Status", "Initialized v6");
         telemetry.update();
         DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
         du.moveIntake(DriveUtility.CLAW_OPEN);
         du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
 
-        for(DcMotor m : du.motorList ) {
-            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
+        // first.
+        initVuforia();
+
+        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
+            initTfod();
+        } else {
+            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
 
-
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.mode                = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled      = false;
-
-        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
-        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
-        // and named "imu".
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        imu.initialize(parameters);
-
-        telemetry.addData("Mode", "calibrating...");
-        telemetry.update();
-
-        // make sure the imu gyro is calibrated before continuing.
-        while (!isStopRequested() && !imu.isGyroCalibrated())
-        {
-            sleep(50);
-            idle();
+        /**
+         * Activate TensorFlow Object Detection before we wait for the start command.
+         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
+         **/
+        if (tfod != null) {
+            tfod.activate();
         }
-
-        telemetry.addData("Mode", "waiting for start");
-        telemetry.addData("imu calib status", imu.getCalibrationStatus().toString());
-        telemetry.update();
-
-        // wait for start button.
-
-        sleep(1000);
-
 
         waitForStart();
-        resetStartTime();
 
-        double an = 0;
+        if (opModeIsActive()) {
+            du.log("Move to get good image", "");
+            du.moveWithEncoder(24, .3, true);
+            sleep(100);
 
-        int dir = 1;
-        double pf = 0;
-        double pfTarget = .9;
-        double pfRampStep = 0.05;
-        double rampTime = 1;
-        double numRampSteps = pfTarget/pfRampStep;
-        double rampCheckTime = rampTime/numRampSteps;
-        double lastRampCheck = 0;
-        double corBack = 1;
-        double corFront = 1;
-        double corVal = 0.001;//0.00001;
-        double angleFuzz = 0.0000001;
-
-        double distToTravelInFt = 8;
-        double distToTravelInCM = distToTravelInFt*30.48;
-        double distToTravelInTicks = distToTravelInCM*TICKS_PER_CM;
-        double currentDistInTicks = 0;
-
-        double distToRampDownInFt = 4;
-        double distToRampDownInCM = distToRampDownInFt*30.48;
-        double distToRampDownInTicks = distToRampDownInCM*TICKS_PER_CM;
-        boolean rampDown = false;
-
-
-        double accelFactor = 1;
-
-        int rampingYesNo = 1;
-
-        boolean movingToTarget = true;
-        double rotatAngleTarget = 2;
-
-        while (opModeIsActive() && getRuntime() < 10) {
-            int br = du.motorList.get(0).getCurrentPosition();
-            int fr = du.motorList.get(1).getCurrentPosition();
-            int bl = du.motorList.get(2).getCurrentPosition();
-            int fl = du.motorList.get(3).getCurrentPosition();
-            if(movingToTarget) {
-                currentDistInTicks = (Math.abs(fr) + Math.abs(br) + Math.abs(bl) + Math.abs(fl)) / 4;
-                if (currentDistInTicks > distToTravelInTicks) {
-                    du.motorList.get(0).setPower(0);  // br
-                    du.motorList.get(1).setPower(0);  // fr
-                    du.motorList.get(2).setPower(0);  // bl
-                    du.motorList.get(3).setPower(0);  // fl
-                    movingToTarget = false;
-                } else {
-                    du.motorList.get(0).setPower(-1 * -dir * pf * corBack * accelFactor);  // br
-                    du.motorList.get(1).setPower(1 * -dir * pf * corFront);  // fr
-                    du.motorList.get(2).setPower(1 * dir * pf * corBack * accelFactor);  // bl
-                    du.motorList.get(3).setPower(-1 * dir * pf * corFront);  // fl
+            du.log("Start skystone recognition", "");
+            if (tfod != null) {
+                du.log("Tensorflow is initialized", "");
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                double startTime = getRuntime();
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                du.log("First # Object Detected", "" + updatedRecognitions.size());
+                if( updatedRecognitions.size() < 2 ) {
+                    sleep(300);
+                    updatedRecognitions = tfod.getUpdatedRecognitions();
                 }
+                if (updatedRecognitions != null) {
+                    du.log("# Object Detected", "" + updatedRecognitions.size());
+                    // step through the list of recognitions and display boundary info.
+                    int i = 0;
+                    Recognition skystone = null;
+                    boolean foundSkystone = false;
+                    double leftCoord = 1000; // be more intelligent with this value
+                    //Recognition leftMostStone = null;
+                    for (Recognition recognition : updatedRecognitions) {
+                        du.log(String.format("label (%d)", i), recognition.getLabel() + ", " + recognition.getConfidence());
+                        du.log(String.format("  left,top (%d)", i), recognition.getLeft() + "," + recognition.getTop());
+                        du.log(String.format("  right,bottom (%d)", i), recognition.getRight() + ", " + recognition.getBottom());
 
+                        if( recognition.getLabel().equals(LABEL_SECOND_ELEMENT)) {
+                            foundSkystone = true;
+                            skystone = recognition;
+                        }
 
-                if (currentDistInTicks > distToTravelInTicks - distToRampDownInTicks) {
-                    rampDown = true;
-                    pf = pf - 0.01;
-                    if (pf < 0) {
-                        pf = 0;
+                        if( recognition.getLeft() < leftCoord ) {
+                            leftCoord = recognition.getLeft();
+                        }
                     }
-                }
 
-                if (pf < pfTarget && (getRuntime() - lastRampCheck) > rampCheckTime && !rampDown) {
-                    lastRampCheck = getRuntime();
-                    pf = pf + pfRampStep;
-                    rampingYesNo = 1;
-                    accelFactor = 1.08;
-                } else if (pf < pfTarget) {
-                    rampingYesNo = 1;
-                } else {
-                    rampingYesNo = 0;
-                    accelFactor = 1.08;
+                    if( foundSkystone ) {
+                        // first or second position
+                        du.log("Skystone", "1st or 2nd Position");
+                        if( skystone.getLeft() == leftCoord ) {
+                            du.log("Skystone Position", "2");
+                        }
+                        else {
+                            du.log("Skystone Position", "1");
+                        }
+                    }
+                    else {
+                        // third position
+                        du.log("Skystone Position", "3 (maybe)");
+                    }
+                    du.log("Time", "" + (getRuntime() - startTime));
+                    telemetry.update();
+                }
+                else {
+                    du.log("Recognitions is NULL", "");
                 }
             }
-            else
-            {
-                if(an > rotatAngleTarget)
-                {
-                    du.motorList.get(0).setPower(0.05);  // br
-                    du.motorList.get(1).setPower(0.05);  // fr
-                    du.motorList.get(2).setPower(0.05);  // bl
-                    du.motorList.get(3).setPower(0.05);  // fl
-                }
-                else if (an < -rotatAngleTarget)
-                {
-                    du.motorList.get(0).setPower(-0.05);  // br
-                    du.motorList.get(1).setPower(-0.05);  // fr
-                    du.motorList.get(2).setPower(-0.05);  // bl
-                    du.motorList.get(3).setPower(-0.05);  // fl
-                }
-                else
-                {
-                    du.motorList.get(0).setPower(0);  // br
-                    du.motorList.get(1).setPower(0);  // fr
-                    du.motorList.get(2).setPower(0);  // bl
-                    du.motorList.get(3).setPower(0);  // fl
-                }
-
+            else {
+                du.log("Tensorflow not initialized", "");
             }
-
-
-
-            an = getAngle();
-            //for(DcMotor m : du.motorList ) {
-            //   a = m.getCurrentPosition();
-
-            //}
-            telemetry.addData("rotating",!movingToTarget);
-            telemetry.addData("time: ",getRuntime());
-            //telemetry.addData("br: ", br);
-            //telemetry.addData("fr: ", fr);
-            //telemetry.addData("bl: ", bl);
-            //telemetry.addData("fl: ", fl);
-            telemetry.addData("angle: ", an);
-            telemetry.addData("ramping: ", rampDown);
-            //telemetry.addData("corFront: ",corFront);
-            //telemetry.addData("corBack: ",corBack);
-            telemetry.addData("currentTicks: ",Math.round(currentDistInTicks));
-            telemetry.addData(" rampingDown: ",Math.round(distToTravelInTicks-distToRampDownInTicks));
-            telemetry.addData(" targetTicks: ",Math.round(distToTravelInTicks));
-            telemetry.update();
-            idle();
-
-            if(an>angleFuzz) {
-                corBack = corBack * (1+corVal);
-                corFront = corFront * (1-corVal);
-            }
-            if(an < -angleFuzz) {
-                corBack = corBack*(1-corVal);
-                corFront = corFront * (1+corVal);
-            }
-
         }
-        du.motorList.get(0).setPower(0);  // br
-        du.motorList.get(1).setPower(0);  // fr
-        du.motorList.get(2).setPower(0);  // bl
-        du.motorList.get(3).setPower(0);  // fl
-        sleep(5000);
-    }
 
+        sleep(5000);
+        du.log("Shutting down Tensorflow", "");
+        if (tfod != null) {
+            tfod.shutdown();
+            du.log("Shutdown complete", "");
+        }
+    }
 
     /**
-     * Get current cumulative angle rotation from last reset.
-     * @return Angle in degrees. + = left, - = right.
+     * Initialize the Vuforia localization engine.
      */
-    private double getAngle()
-    {
-        // We experimentally determined the Z axis is the axis we want to use for heading angle.
-        // We have to process the angle because the imu works in euler angles so the Z axis is
-        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
-        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
 
-        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
-        if (deltaAngle < -180)
-            deltaAngle += 360;
-        else if (deltaAngle > 180)
-            deltaAngle -= 360;
-
-        globalAngle += deltaAngle;
-
-        lastAngles = angles;
-
-        return globalAngle;
+        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
+
+    /**
+     * Initialize the TensorFlow Object Detection engine.
+     */
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minimumConfidence = 0.4;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+    }
+
 
 }
