@@ -273,6 +273,26 @@ public class DriveUtility {
 
     }
 
+    public void moveLinearSlideWithRunUsingEncoders(double distance) {
+
+        log("function has been called","");
+        linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        int roundedDistance = (int)Math.round(distance * LINEAR_TICKS_PER_CM);
+        linearSlide.setTargetPosition(roundedDistance*-1);
+
+        linearSlide.setPower(0.5);
+        log( "before linear slide position", "" + linearSlide.getCurrentPosition());
+        log( "before linear slide target", "" + linearSlide.getTargetPosition());
+        while (opMode.opModeIsActive() && linearSlide.getCurrentPosition() >= linearSlide.getTargetPosition()+20 ) {
+            log( "linear slide position", "" + linearSlide.getCurrentPosition());
+            telemetry.update();
+        }
+        linearSlide.setPower(0);
+
+    }
+
 
 
     // RUN TO POSITION MAIN FUNCTION
@@ -332,6 +352,7 @@ public class DriveUtility {
                         backCorrection = backCorrection * (1 + angleCorrect);
                         frontCorrection = frontCorrection * (1 - angleCorrect);
                     } else if (moveState == STATE_STRAFE_LEFT){
+                        //
                         backCorrection = backCorrection * (1 - angleCorrect);
                         frontCorrection = frontCorrection * (1 + angleCorrect);
                     }
@@ -478,7 +499,7 @@ public class DriveUtility {
 
     protected void log(String caption, String message) {
         telemetry.addData(caption, message);
-        RobotLog.a("[BBTC]" + caption + ": " + message);
+        RobotLog.a(opMode.getRuntime() + " [BBTC]" + caption + ": " + message);
         //telemetry.update();
     }
 

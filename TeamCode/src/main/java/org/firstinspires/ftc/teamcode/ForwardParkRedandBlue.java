@@ -31,61 +31,23 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 
-import java.util.ArrayList;
-import java.util.List;
+@Autonomous(name="ForwardParkRedandBlue", group="Linear Opmode")
+public class ForwardParkRedandBlue extends LinearOpMode {
 
-
-/**
- * Autonomous sample of moving with time vs moving with encoders
- *
- * @author Sylvianne J Rodgers
- */
-
-@Autonomous(name="Autonomous Test with Encoders", group="Linear Opmode")
-public class AutoTestWithEncoder extends LinearOpMode {
-    public final static double SPEED = 0.75;
-
-    public static double TICKS_PER_CM = 17.1;
-
-    private DcMotor backLeft = null;
-    private DcMotor frontLeft = null;
-    private DcMotor backRight = null;
-    private DcMotor frontRight = null;
-    private Servo intake = null;
-    private Servo leftClaw = null;
-    private Servo rightClaw = null;
-    private DcMotor linearSlide = null;
-    List<DcMotor> motorList = new ArrayList<DcMotor>();
-
-
-    double powerFactor = 0.3;
-
-    @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized v5");
+        telemetry.addData("change number", 5);
+        telemetry.addData("Status", "Initialized v7");
         telemetry.update();
+        DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
 
-        DriveUtility du = new DriveUtility(hardwareMap, telemetry, this);
-        //////////////////////////////////////
+        du.moveIntake(DriveUtility.CLAW_OPEN);
         waitForStart();
 
         if (opModeIsActive()) {
-
-            du.moveWithEncoder(-18, SPEED);
-            //du.moveLinearSlideWithEncoders(3);
-            sleep(100);
-            du.strafeLeftDistance(170,0.8);
-
-
-
-            telemetry.update();
-
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+            sleep(5000);
+            du.moveWithEncoder(25, 0.7);
         }
     }
 }
-
-
-

@@ -30,11 +30,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
 @Autonomous(name="1StoneFoundationParkTest", group="Linear Opmode")
-
+@Disabled
 public class Auto1StoneFoundationParkTest extends LinearOpMode {
 
     public void runOpMode() {

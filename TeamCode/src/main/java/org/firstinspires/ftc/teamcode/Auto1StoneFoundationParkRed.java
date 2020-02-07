@@ -58,14 +58,15 @@ public class Auto1StoneFoundationParkRed extends LinearOpMode {
             du.moveIntake(DriveUtility.CLAW_CLOSE);
             sleep(500);
 
-            // Move backwards
-            du.log("BEFORE", "Move Backwards");
-            du.moveWithEncoder(-22, SPEED);
-            sleep(300);
 
             // Move linear slide to prevent stone from slipping
             du.moveLinearSlideWithEncoders(3);
             sleep(100);
+
+            // Move backwards
+            du.log("BEFORE", "Move Backwards");
+            du.moveWithEncoder(-18, SPEED);
+            sleep(300);
 
             // Strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
@@ -128,7 +129,7 @@ public class Auto1StoneFoundationParkRed extends LinearOpMode {
             sleep(300);
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
 
-sleep(3000);
+            sleep(3000);
 
             telemetry.update();
 
