@@ -340,7 +340,7 @@ public class DriveUtility {
                 if (angle > centerAngle) {
                     // increase the back wheel power and decrease the front wheel power
                     if (moveState == STATE_STRAFE_RIGHT) {
-                        backCorrection = backCorrection * (1 - angleCorrect);
+                        backCorrection = backCorrection* (1 - angleCorrect);
                         frontCorrection = frontCorrection * (1 + angleCorrect);
                     } else if (moveState == STATE_STRAFE_LEFT ){
                         backCorrection = backCorrection * (1 + angleCorrect);

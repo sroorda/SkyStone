@@ -114,7 +114,7 @@ public class Auto1StoneFoundationParkBlue extends LinearOpMode {
             du.log("Start Linear Slide", "");
 
             //strafe left to park in the spot closest to the middle bridge
-            du.strafeRightDistance(48, SPEED, true);
+            du.strafeRightDistance(40, SPEED, true);
 
             //back up the rest of the way
             du.moveWithEncoder(-47.5, SPEED);

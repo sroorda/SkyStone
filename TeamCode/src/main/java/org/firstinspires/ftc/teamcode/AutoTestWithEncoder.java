@@ -76,7 +76,8 @@ public class AutoTestWithEncoder extends LinearOpMode {
 
             du.moveWithEncoder(-18, SPEED);
             //du.moveLinearSlideWithEncoders(3);
-            sleep(100);
+
+            sleep(1000);
             du.strafeLeftDistance(170,0.8);
 
 

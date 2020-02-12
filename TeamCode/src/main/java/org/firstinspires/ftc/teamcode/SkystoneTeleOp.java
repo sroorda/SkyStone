@@ -45,10 +45,11 @@ public class SkystoneTeleOp extends LinearOpMode {
     capstone.setPosition(1);
     boolean isBPressed = false;
     boolean isAPressed = false;
+    boolean isLeftTriggerPressed = false;
     ElapsedTime timeSinceLastPress = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     waitForStart();
     if (opModeIsActive()) {
-      double wheelsPowerFactor = 0.6;
+      double wheelsPowerFactor = 0.7;
       timeSinceLastPress.reset();
       while (opModeIsActive()) {
         double drive = gamepad1.left_stick_y * wheelsPowerFactor;
@@ -96,6 +97,21 @@ public class SkystoneTeleOp extends LinearOpMode {
             isAPressed = false;
           }
           timeSinceLastPress.reset();
+        }
+
+        if (gamepad2.left_trigger == 1) {
+            // intake claw open
+            intake.setPosition(1);
+            isClawDown = false;
+
+            // foundation claws closed
+            leftClaw.setPosition(1);
+            rightClaw.setPosition(0);
+            isBPressed = true;
+
+            // capstone dumped
+            capstone.setPosition(0);
+            isAPressed = true;
         }
 
         linearSlide.setPower(gamepad2.left_stick_y * .75);
