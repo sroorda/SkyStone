@@ -7,11 +7,16 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +40,15 @@ public class DriveUtility {
 
     public static double TICKS_PER_CM = 17.1;
     public static double LINEAR_TICKS_PER_CM = 45;
+
+    private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
+    private static final String LABEL_FIRST_ELEMENT = "Stone";
+    private static final String LABEL_SECOND_ELEMENT = "Skystone";
+    private static final String VUFORIA_KEY =
+            "Ac9/DqT/////AAABmWMwXGTjAUE3umMiPxGQDekSkHssqfs1px7rE0Lb51sJTncsz5jPFfDXlXFJTwO+kp17qkzL7FMszaUkQjDcril6zxU+QBCrl5oPMPOu6kHoc/5KEvqM31PG2/MIzMF4rIM9mQFw9f5Y20q13TcmDzA1RwDGdrmaGO8nv+2tid9PyfIv4s6GCdspdmSDLRq7shREVfC81Wli2bMoNI49kZNj3bydsSSIFoMBV+PX2FVvpnWkqQ2OjZiWR4h08/c1VdaiBqrN5AH1Lz5LYlM0Hr0M/ZCgQdC2rQVxNfBV1pY6XfzuTeYoksCFbUxrSBs9nvSwz4/0LPVIMmmvYS57kjgpDv0CvbQ5p/svOvuMNuvG";
+
+    private VuforiaLocalizer vuforia;
+    private TFObjectDetector tfod;
 
     private DcMotor backLeft = null;
     private DcMotor frontLeft = null;
@@ -63,6 +77,7 @@ public class DriveUtility {
         initHardware();
         initIMU();
         initEncoders();
+        initTensorFlow();
     }
     
     // INITIATING ENCODERS
@@ -102,10 +117,83 @@ public class DriveUtility {
         telemetry.addData("imu calib status", imu.getCalibrationStatus().toString());
         telemetry.update();
     }
-    
+
+    public void initTensorFlow() {
+
+
+        // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
+        // first.
+        initVuforia();
+
+        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
+            initTfod();
+        } else {
+            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+        }
+
+        /**
+         * Activate TensorFlow Object Detection before we wait for the start command.
+         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
+         **/
+        if (tfod != null) {
+            tfod.activate();
+        }
+
+    }
+
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
+    }
+
+    /**
+     * Initialize the TensorFlow Object Detection engine.
+     */
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minimumConfidence = 0.6;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+    }
+
+    //Tensor Flow
+    public void tensorFlow() {
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                for (Recognition recognition : updatedRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+                }
+                telemetry.update();
+            }
+        }
+        if (tfod != null) {
+            tfod.shutdown();
+        }
+    }
+
     // MOVE TO POSITION FUNCTIONS
-
-
 
     public void moveWithEncoder(double distance, double speed){
         moveWithEncoder(distance, speed, false);

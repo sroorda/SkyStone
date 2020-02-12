@@ -29,8 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -44,8 +44,8 @@ import java.util.List;
  * @author Sylvianne J Rodgers
  */
 
-@Autonomous(name="Autonomous Test with Encoders", group="Linear Opmode")
-public class AutoTestWithEncoder extends LinearOpMode {
+@TeleOp(name="TeleOpTest", group="Linear Opmode")
+public class TensorFlowTest extends LinearOpMode {
     public final static double SPEED = 0.75;
 
     public static double TICKS_PER_CM = 17.1;
@@ -74,6 +74,8 @@ public class AutoTestWithEncoder extends LinearOpMode {
 
         if (opModeIsActive()) {
 
+            du.tensorFlow();
+            sleep(10000);
 
 
 
