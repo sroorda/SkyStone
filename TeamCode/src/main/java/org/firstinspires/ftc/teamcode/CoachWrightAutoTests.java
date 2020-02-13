@@ -29,248 +29,127 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-//import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-//import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-//import org.firstinspires.ftc.robotcore.external.navigation.Position;
-//import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 
 
-@Autonomous(name="CoachWTests", group="Linear Opmode")
-@Disabled
+
+@Autonomous(name="CoachWrightAutoTests", group="Linear Opmode")
+
 public class CoachWrightAutoTests extends LinearOpMode {
     public final static double SPEED = 0.75;
-
-    BNO055IMU imu;
-    Orientation             lastAngles = new Orientation();
-    double                  globalAngle, power = .30, correction;
-    public static double TICKS_PER_CM = 17.1;
-
     public void runOpMode() {
-        telemetry.addData("change number", 2);
-        telemetry.addData("Status", "Initialized v1");
+        telemetry.addData("Status", "Initialized v6");
         telemetry.update();
-        DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
+        CoachUtility du = new CoachUtility(hardwareMap,telemetry,this);
         du.moveIntake(DriveUtility.CLAW_OPEN);
         du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
 
-        for(DcMotor m : du.motorList ) {
-            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-
-
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.mode                = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled      = false;
-
-        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
-        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
-        // and named "imu".
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        imu.initialize(parameters);
-
-        telemetry.addData("Mode", "calibrating...");
-        telemetry.update();
-
-        // make sure the imu gyro is calibrated before continuing.
-        while (!isStopRequested() && !imu.isGyroCalibrated())
-        {
-            sleep(50);
-            idle();
-        }
-
-        telemetry.addData("Mode", "waiting for start");
-        telemetry.addData("imu calib status", imu.getCalibrationStatus().toString());
-        telemetry.update();
-
-        // wait for start button.
-
-        sleep(1000);
-
-
         waitForStart();
-        resetStartTime();
 
-        double an = 0;
+        if (opModeIsActive()) {
 
-        int dir = 1;
-        double pf = 0;
-        double pfTarget = .9;
-        double pfRampStep = 0.05;
-        double rampTime = 1;
-        double numRampSteps = pfTarget/pfRampStep;
-        double rampCheckTime = rampTime/numRampSteps;
-        double lastRampCheck = 0;
-        double corBack = 1;
-        double corFront = 1;
-        double corVal = 0.001;//0.00001;
-        double angleFuzz = 0.0000001;
+            du.log("BEFORE", "Move Backwards");
+            du.moveWithEncoder(-18, SPEED);
+            sleep(300);
 
-        double distToTravelInFt = 8;
-        double distToTravelInCM = distToTravelInFt*30.48;
-        double distToTravelInTicks = distToTravelInCM*TICKS_PER_CM;
-        double currentDistInTicks = 0;
-
-        double distToRampDownInFt = 4;
-        double distToRampDownInCM = distToRampDownInFt*30.48;
-        double distToRampDownInTicks = distToRampDownInCM*TICKS_PER_CM;
-        boolean rampDown = false;
+            // Strafe towards foundation
+            du.log("BEFORE", "Strafe towards foundation");
+            du.strafeRightDistance(170, 0.8);
+            sleep(300);
 
 
-        double accelFactor = 1;
+            /*du.moveIntake(CoachUtility.CLAW_CLEAR_BLOCK);
 
-        int rampingYesNo = 1;
+            // Move forward to line up with first block
+            du.log("BEFORE", "Move to Stone");
+            du.moveWithEncoder(74, .3);
 
-        boolean movingToTarget = true;
-        double rotatAngleTarget = 2;
-
-        while (opModeIsActive() && getRuntime() < 10) {
-            int br = du.motorList.get(0).getCurrentPosition();
-            int fr = du.motorList.get(1).getCurrentPosition();
-            int bl = du.motorList.get(2).getCurrentPosition();
-            int fl = du.motorList.get(3).getCurrentPosition();
-            if(movingToTarget) {
-                currentDistInTicks = (Math.abs(fr) + Math.abs(br) + Math.abs(bl) + Math.abs(fl)) / 4;
-                if (currentDistInTicks > distToTravelInTicks) {
-                    du.motorList.get(0).setPower(0);  // br
-                    du.motorList.get(1).setPower(0);  // fr
-                    du.motorList.get(2).setPower(0);  // bl
-                    du.motorList.get(3).setPower(0);  // fl
-                    movingToTarget = false;
-                } else {
-                    du.motorList.get(0).setPower(-1 * -dir * pf * corBack * accelFactor);  // br
-                    du.motorList.get(1).setPower(1 * -dir * pf * corFront);  // fr
-                    du.motorList.get(2).setPower(1 * dir * pf * corBack * accelFactor);  // bl
-                    du.motorList.get(3).setPower(-1 * dir * pf * corFront);  // fl
-                }
+            // Drop the claw to move the block
+            du.moveIntake(CoachUtility.CLAW_CLOSE);
+            sleep(500);
 
 
-                if (currentDistInTicks > distToTravelInTicks - distToRampDownInTicks) {
-                    rampDown = true;
-                    pf = pf - 0.01;
-                    if (pf < 0) {
-                        pf = 0;
-                    }
-                }
+            // Move linear slide to prevent stone from slipping
+            du.moveLinearSlideWithEncoders(3);
+            sleep(100);
 
-                if (pf < pfTarget && (getRuntime() - lastRampCheck) > rampCheckTime && !rampDown) {
-                    lastRampCheck = getRuntime();
-                    pf = pf + pfRampStep;
-                    rampingYesNo = 1;
-                    accelFactor = 1.08;
-                } else if (pf < pfTarget) {
-                    rampingYesNo = 1;
-                } else {
-                    rampingYesNo = 0;
-                    accelFactor = 1.08;
-                }
-            }
-            else
-            {
-                if(an > rotatAngleTarget)
-                {
-                    du.motorList.get(0).setPower(0.05);  // br
-                    du.motorList.get(1).setPower(0.05);  // fr
-                    du.motorList.get(2).setPower(0.05);  // bl
-                    du.motorList.get(3).setPower(0.05);  // fl
-                }
-                else if (an < -rotatAngleTarget)
-                {
-                    du.motorList.get(0).setPower(-0.05);  // br
-                    du.motorList.get(1).setPower(-0.05);  // fr
-                    du.motorList.get(2).setPower(-0.05);  // bl
-                    du.motorList.get(3).setPower(-0.05);  // fl
-                }
-                else
-                {
-                    du.motorList.get(0).setPower(0);  // br
-                    du.motorList.get(1).setPower(0);  // fr
-                    du.motorList.get(2).setPower(0);  // bl
-                    du.motorList.get(3).setPower(0);  // fl
-                }
+            // Move backwards
+            du.log("BEFORE", "Move Backwards");
+            du.moveWithEncoder(-18, SPEED);
+            sleep(300);
 
-            }
+            // Strafe towards foundation
+            du.log("BEFORE", "Strafe towards foundation");
+            du.strafeRightDistance(170, 0.8);
+            sleep(300);
 
+            // Raise linear slide
+            du.moveLinearSlideWithEncoders(10);
+            sleep(300);
 
+            // Move forward towards foundation
+            du.log("BEFORE", "Move forward towards foundation");
+            du.moveWithEncoder(40, 0.5);
+            //sleep(300);
 
-            an = getAngle();
-            //for(DcMotor m : du.motorList ) {
-            //   a = m.getCurrentPosition();
+            // Lower foundation claws to grab foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+            sleep(500);
 
-            //}
-            telemetry.addData("rotating",!movingToTarget);
-            telemetry.addData("time: ",getRuntime());
-            //telemetry.addData("br: ", br);
-            //telemetry.addData("fr: ", fr);
-            //telemetry.addData("bl: ", bl);
-            //telemetry.addData("fl: ", fl);
-            telemetry.addData("angle: ", an);
-            telemetry.addData("ramping: ", rampDown);
-            //telemetry.addData("corFront: ",corFront);
-            //telemetry.addData("corBack: ",corBack);
-            telemetry.addData("currentTicks: ",Math.round(currentDistInTicks));
-            telemetry.addData(" rampingDown: ",Math.round(distToTravelInTicks-distToRampDownInTicks));
-            telemetry.addData(" targetTicks: ",Math.round(distToTravelInTicks));
+            // Drop stone in foundation
+            du.moveIntake(DriveUtility.CLAW_OPEN);
+            sleep(500);
+            long msToSleepUntilEnd = Math.round((29.9-getRuntime())*1000);
+            sleep(msToSleepUntilEnd);
+            //rotate right slowly a little
+            du.log("BEFORE", "Rotate slowly a little");
+            du.rotateRight(500, 0.3);
+
+            //move backwards to the wall
+            du.log("BEFORE", "Move backwards to wall");
+            du.moveWithEncoder(-75, SPEED);
+
+            //rotate right to rotate foundation
+            du.log("BEFORE", "Rotate right to rotate foundation");
+            du.rotateRight(1500, 0.4);
+            sleep(300);
+
+            //move forward and push foundation against wall
+            du.log("BEFORE", "Move forward and push foundation against wall");
+            du.moveWithEncoder(100,SPEED);
+
+            //open the foundation claws so we let go of the foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
+            sleep(300);
+
+            //move backwards half way
+            du.moveWithEncoder(-47.5, SPEED);
+            du.log("Start Linear Slide", "");
+
+            //strafe left to park in the spot closest to the middle bridge
+            du.strafeLeftDistance(40, SPEED, true);
+
+            //back up the rest of the way
+            du.moveWithEncoder(-47.5, SPEED);
+
+            //reset all of our mechanisms
+            du.moveLinearSlideWithEncoders(-13);
+            du.log("End Linear Slide", "");
+            sleep(300);
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+            sleep(300);
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+
+            sleep(3000);*/
+
             telemetry.update();
-            idle();
-
-            if(an>angleFuzz) {
-                corBack = corBack * (1+corVal);
-                corFront = corFront * (1-corVal);
-            }
-            if(an < -angleFuzz) {
-                corBack = corBack*(1-corVal);
-                corFront = corFront * (1+corVal);
-            }
 
         }
-        du.motorList.get(0).setPower(0);  // br
-        du.motorList.get(1).setPower(0);  // fr
-        du.motorList.get(2).setPower(0);  // bl
-        du.motorList.get(3).setPower(0);  // fl
-        sleep(5000);
     }
 
 
-    /**
-     * Get current cumulative angle rotation from last reset.
-     * @return Angle in degrees. + = left, - = right.
-     */
-    private double getAngle()
-    {
-        // We experimentally determined the Z axis is the axis we want to use for heading angle.
-        // We have to process the angle because the imu works in euler angles so the Z axis is
-        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
-        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
 
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
-
-        if (deltaAngle < -180)
-            deltaAngle += 360;
-        else if (deltaAngle > 180)
-            deltaAngle -= 360;
-
-        globalAngle += deltaAngle;
-
-        lastAngles = angles;
-
-        return globalAngle;
-    }
 
 }
