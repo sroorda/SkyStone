@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 @Autonomous(name="CoachWrightAutoTests", group="Linear Opmode")
 
 public class CoachWrightAutoTests extends LinearOpMode {
-    public final static double SPEED = 0.75;
+    public final static double SPEED = 0.95;
     public void runOpMode() {
         telemetry.addData("Status", "Initialized v6");
         telemetry.update();
@@ -56,7 +56,7 @@ public class CoachWrightAutoTests extends LinearOpMode {
 
             // Strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
-            du.strafeRightDistance(170, 0.8);
+            du.strafeRightDistance(170,SPEED);
             sleep(300);
 
 

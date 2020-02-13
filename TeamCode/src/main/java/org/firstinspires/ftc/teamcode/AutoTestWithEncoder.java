@@ -46,7 +46,7 @@ import java.util.List;
 
 @Autonomous(name="Autonomous Test with Encoders", group="Linear Opmode")
 public class AutoTestWithEncoder extends LinearOpMode {
-    public final static double SPEED = 0.75;
+    public final static double SPEED = 0.95;
 
     public static double TICKS_PER_CM = 17.1;
 
@@ -74,7 +74,14 @@ public class AutoTestWithEncoder extends LinearOpMode {
 
         if (opModeIsActive()) {
 
+            du.log("BEFORE", "Move Backwards");
+            du.moveWithEncoder(-18, SPEED);
+            sleep(300);
 
+            // Strafe towards foundation
+            du.log("BEFORE", "Strafe towards foundation");
+            du.strafeLeftDistance(170,SPEED);
+            sleep(300);
 
 
 

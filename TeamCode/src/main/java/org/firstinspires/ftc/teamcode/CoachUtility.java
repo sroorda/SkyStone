@@ -393,7 +393,7 @@ public class CoachUtility {
     protected void runMotorsUntilPositionRampSpeed(double drive, double strafe, double rotate, boolean fullSpeed, double targetDistance, int moveState) {
         double angleCorrect = 1;
         double backPowerCorrect = 1;
-
+/*
         if (moveState == STATE_STRAFE_RIGHT) {
             angleCorrect = STRAFE_RIGHT_ANGLE_CORRECT;
             backPowerCorrect = STRAFE_RIGHT_BACK_POWER;
@@ -401,7 +401,7 @@ public class CoachUtility {
         else if (moveState == STATE_STRAFE_LEFT ){
             angleCorrect = STRAFE_LEFT_ANGLE_CORRECT;
             backPowerCorrect = STRAFE_LEFT_BACK_POWER;
-        }
+        }*/
 
         //double flPower = -drive + strafe + rotate;
         //double blPower = -drive - strafe - rotate;
@@ -422,12 +422,14 @@ public class CoachUtility {
         // it will run slightly longer or faster than others
         //while( opMode.opModeIsActive() && (backLeft.isBusy() || frontLeft.isBusy() || backRight.isBusy() || frontRight.isBusy())) {
         double centerAngle = getAngle();
+        moveIntake(CoachUtility.CLAW_CLEAR_BLOCK);
         while( opMode.opModeIsActive() && !reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight)) {
             double angle = getAngle();
             double angleError = centerAngle + angle;
 
             if( moveState != STATE_MOVE ) {
                 frontCorrection = 1+(0.001 * angleError);
+                backCorrection = 1-(0.001*angleError);
 
                 /*if (angle > centerAngle) {
                     // increase the back wheel power and decrease the front wheel power
@@ -460,7 +462,7 @@ public class CoachUtility {
 
 
             if (speedFactor < 1){
-                speedFactor += AMOUNT_INCREASED;
+                speedFactor += AMOUNT_INCREASED/2;
             }
             else {
 
@@ -477,6 +479,7 @@ public class CoachUtility {
             telemetry.update();
 
         }
+        moveIntake(CoachUtility.CLAW_CLOSE);
         setMotorSpeeds(0,0,0,0,0);
     }
 

@@ -421,11 +421,29 @@ public class DriveUtility {
         // it will run slightly longer or faster than others
         //while( opMode.opModeIsActive() && (backLeft.isBusy() || frontLeft.isBusy() || backRight.isBusy() || frontRight.isBusy())) {
         double centerAngle = getAngle();
+        double angleError = 0;
+        double pTerm = 0;
         while( opMode.opModeIsActive() && !reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight)) {
             double angle = getAngle();
 
             if( moveState != STATE_MOVE ) {
-                if (angle > centerAngle) {
+               angleError = angle - centerAngle;
+
+                if (moveState == STATE_STRAFE_RIGHT) {
+                    pTerm = 0.01;
+                    frontCorrection = 1 +(pTerm * angleError);
+                    backCorrection = 1 -(pTerm * angleError);
+
+                } else if (moveState == STATE_STRAFE_LEFT ){
+                    pTerm = 0.001;
+                    frontCorrection = 1 -(pTerm * angleError);
+                    backCorrection = 1 +(pTerm * angleError);
+                }
+
+
+
+
+                /* if (angle > centerAngle) {
                     // increase the back wheel power and decrease the front wheel power
                     if (moveState == STATE_STRAFE_RIGHT) {
                         backCorrection = backCorrection* (1 - angleCorrect);
@@ -444,25 +462,22 @@ public class DriveUtility {
                         backCorrection = backCorrection * (1 - angleCorrect);
                         frontCorrection = frontCorrection * (1 + angleCorrect);
                     }
-                }
+                } */
             }
             log("Angle", "" + angle);
             log("Correction value", backCorrection + ", " + frontCorrection);
             flPower = flPower * frontCorrection;
             frPower = frPower * frontCorrection;
-            brPower = brPower * backCorrection * backPowerCorrect;
-            blPower = blPower * backCorrection * backPowerCorrect;
-            log("power", blPower + ", " + flPower + ", " + brPower + ", " + frPower);
+            brPower = brPower * backCorrection; // * backPowerCorrect;
+            blPower = blPower * backCorrection; // * backPowerCorrect;
+
 
             if (speedFactor < 1){
                 speedFactor += AMOUNT_INCREASED;
-                setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);
+
             }
-            else {
-                //if( strafe != 0 ) {
-                    //setMotorSpeeds(speedFactor, flPower, blPower * 1.08, frPower, brPower * 1.08);
-                //}
-            }
+
+            setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);
             opMode.sleep(50);
             opMode.idle();
             //log("busy:", backLeft.isBusy() + "," + frontLeft.isBusy()+ "," + backRight.isBusy()+ "," + frontRight.isBusy());
@@ -471,16 +486,17 @@ public class DriveUtility {
             telemetry.update();
 
         }
-        for(DcMotor m : motorList ) {
-            //if( !m.isBusy() ) {
-
-                m.setPower(0);
-            //}
-        }
+        setMotorSpeeds(0, 0, 0, 0, 0);
     }
 
 
     private void setMotorSpeeds(double speedFactor, double flPower, double blPower, double frPower, double brPower) {
+        if (speedFactor > 1) {
+            speedFactor = 1;
+        } else if (speedFactor < 0) {
+            speedFactor = 0;
+        }
+        log("power", blPower + ", " + flPower + ", " + brPower + ", " + frPower);
         frontLeft.setPower(speedFactor * flPower);
         backRight.setPower(speedFactor * blPower);
         frontRight.setPower(speedFactor * frPower);
