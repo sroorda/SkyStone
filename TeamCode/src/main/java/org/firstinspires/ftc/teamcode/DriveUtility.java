@@ -163,33 +163,103 @@ public class DriveUtility {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
-        tfodParameters.minimumConfidence = 0.6;
+        tfodParameters.minimumConfidence = 0.4;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
     //Tensor Flow
-    public void tensorFlow() {
+    public int tensorFlow() {
+        int position = 1;
+
         if (tfod != null) {
             // getUpdatedRecognitions() will return null if no new information is available since
             // the last time that call was made.
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null && updatedRecognitions.size() < 2){
+                opMode.sleep(300);
+                updatedRecognitions = tfod.getUpdatedRecognitions();
+                log("recognition", "2nd attempt");
+            }
+            if (updatedRecognitions == null || updatedRecognitions.size() < 2){
+                opMode.sleep(300);
+                updatedRecognitions = tfod.getUpdatedRecognitions();
+                log("recognition", "3rd attempt");
+            }
+
             if (updatedRecognitions != null) {
-                telemetry.addData("# Object Detected", updatedRecognitions.size());
+               log("# Object Detected", "" + updatedRecognitions.size());
                 // step through the list of recognitions and display boundary info.
                 int i = 0;
+                Recognition skystone = null;
+                Recognition leftmost = null;
                 for (Recognition recognition : updatedRecognitions) {
                     telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
                     telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
                             recognition.getLeft(), recognition.getTop());
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
+
+                    if (recognition.getLabel().equals(LABEL_SECOND_ELEMENT)){
+                        skystone = recognition;
+                        telemetry.addData("Found Skystone", "");
+                    }
+
+                    if (leftmost == null){
+                      leftmost = recognition;
+                    }
+                    else{
+                        if (recognition.getLeft() < leftmost.getLeft()){
+                            leftmost = recognition;
+                        }
+
+                    }
+                }
+                if (skystone != null ){
+                    log("Skystone", "" + skystone.getLeft());
+                    log("Leftmost", "" + leftmost.getLeft());
+                }
+                else {
+                    log("Skystone", "NULL");
+                    log("Leftmost", "NULL");
+                }
+
+                if (updatedRecognitions.size() <= 1){
+                    log("Skystone Position", "1 (NO OBJECTS FOUND)");
+                    position = 1;
+                }
+                else if (skystone == null){
+                    log("Skystone Position", "3");
+                    telemetry.addData("Skystone is in position 3", "");
+                    position = 3;
+                }
+                else if (skystone.getLeft() == leftmost.getLeft()){
+                    log("Skystone Position", "2");
+                    telemetry.addData("Skystone is in position 2", "");
+                    position = 2;
+                }
+                else {
+                    log("Skystone Position", "1");
+                    telemetry.addData("Skystone is in position 1", "");
+                    position = 1;
                 }
                 telemetry.update();
+            }
+            else{
+                log("Skystone = Null", "");
             }
         }
         if (tfod != null) {
             tfod.shutdown();
+        }
+
+        return position;
+    }
+
+    //first stone
+    public void firstStone(boolean isRed){
+        if(isRed){
+
         }
     }
 
@@ -423,19 +493,21 @@ public class DriveUtility {
         double centerAngle = getAngle();
         double angleError = 0;
         double pTerm = 0;
+        double cumulativeAngleError = 0;
+
         while( opMode.opModeIsActive() && !reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight)) {
             double angle = getAngle();
 
             if( moveState != STATE_MOVE ) {
                angleError = angle - centerAngle;
-
+               cumulativeAngleError += angleError;
                 if (moveState == STATE_STRAFE_RIGHT) {
-                    pTerm = 0.01;
+                    pTerm = 0.001;
                     frontCorrection = 1 +(pTerm * angleError);
                     backCorrection = 1 -(pTerm * angleError);
 
                 } else if (moveState == STATE_STRAFE_LEFT ){
-                    pTerm = 0.001;
+                    pTerm = 0.0001;
                     frontCorrection = 1 -(pTerm * angleError);
                     backCorrection = 1 +(pTerm * angleError);
                 }
@@ -466,14 +538,14 @@ public class DriveUtility {
             }
             log("Angle", "" + angle);
             log("Correction value", backCorrection + ", " + frontCorrection);
-            flPower = flPower * frontCorrection;
-            frPower = frPower * frontCorrection;
+            flPower = flPower * frontCorrection;//.998;
+            frPower = frPower * frontCorrection;//.998;
             brPower = brPower * backCorrection; // * backPowerCorrect;
             blPower = blPower * backCorrection; // * backPowerCorrect;
 
 
             if (speedFactor < 1){
-                speedFactor += AMOUNT_INCREASED;
+                speedFactor += AMOUNT_INCREASED/2;
 
             }
 
@@ -486,6 +558,7 @@ public class DriveUtility {
             telemetry.update();
 
         }
+        log("Cumaltive angle error: ",cumulativeAngleError+" ");
         setMotorSpeeds(0, 0, 0, 0, 0);
     }
 
@@ -496,7 +569,8 @@ public class DriveUtility {
         } else if (speedFactor < 0) {
             speedFactor = 0;
         }
-        log("power", blPower + ", " + flPower + ", " + brPower + ", " + frPower);
+        //log("power bl fl br fr: ", blPower + ", " + flPower + ", " + brPower + ", " + frPower);
+        log("power: ", String.format("bl %.5f fl %.5f br %.5f fr %.5f",blPower,flPower,brPower,frPower));
         frontLeft.setPower(speedFactor * flPower);
         backRight.setPower(speedFactor * blPower);
         frontRight.setPower(speedFactor * frPower);

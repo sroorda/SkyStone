@@ -31,65 +31,61 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
-/**
- * Autonomous sample of moving with time vs moving with encoders
- *
- * @author Sylvianne J Rodgers
- */
+@Autonomous(name="SkystoneAutoParkRed", group="Linear Opmode")
 
-@Autonomous(name="Autonomous Test with Encoders", group="Linear Opmode")
-public class AutoTestWithEncoder extends LinearOpMode {
-    public final static double SPEED = 0.95;
-
-    public static double TICKS_PER_CM = 17.1;
-
-    private DcMotor backLeft = null;
-    private DcMotor frontLeft = null;
-    private DcMotor backRight = null;
-    private DcMotor frontRight = null;
-    private Servo intake = null;
-    private Servo leftClaw = null;
-    private Servo rightClaw = null;
-    private DcMotor linearSlide = null;
-    List<DcMotor> motorList = new ArrayList<DcMotor>();
-
-
-    double powerFactor = 0.3;
-
-    @Override
+public class SkystoneAutoParkRed extends LinearOpMode {
+    public final static double SPEED = 0.75;
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized v5");
+        telemetry.addData("Status", "Initialized v6");
         telemetry.update();
+        DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
+        du.moveIntake(DriveUtility.CLAW_OPEN);
+        du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
 
-        DriveUtility du = new DriveUtility(hardwareMap, telemetry, this);
-        //////////////////////////////////////
         waitForStart();
+        du.moveIntake(0.5);
 
         if (opModeIsActive()) {
 
-            du.log("BEFORE", "Move Backwards");
+            du.moveWithEncoder(28, 1, true);
+            sleep(200);
+            int position = du.tensorFlow();
+            if (position == 1){
+                // Move forward to line up with the block
+                du.log("BEFORE", "Move to Stone");
+                du.moveWithEncoder(51, 1, true);
+            }
+            else if (position == 2){
+                // Strafe to the second block
+                du.log("BEFORE STRAFE LEFT", "Move to stone");
+                du.strafeLeftDistance(18,1,true);
+                // Move forward to line up with the block
+                du.log("BEFORE", "Grab stone");
+                du.moveWithEncoder(51, 1, true);
+            }
+            else{
+                // Strafe to the second block
+                du.log("BEFORE STRAFE LEFT", "Move to stone");
+                du.strafeLeftDistance(44,1,true);
+                // Move forward to line up with the block
+                du.log("BEFORE", "Grab stone");
+                du.moveWithEncoder(51, 1, true);
+            }
+            // Drop the claw to move the block
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+
+            // Move backwards
             du.moveWithEncoder(-18, SPEED);
-            sleep(300);
 
-            // Strafe towards foundation
-            du.log("BEFORE", "Strafe towards foundation");
-            du.strafeRightDistance(170,SPEED);
-            sleep(300);
-
-
-
+            sleep(10000);
             telemetry.update();
 
         }
     }
+
+
+
+
 }
-
-
-

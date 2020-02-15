@@ -70,7 +70,7 @@ public class Auto1StoneFoundationParkRed extends LinearOpMode {
 
             // Strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
-            du.strafeRightDistance(170, 0.8);
+            du.strafeRightDistance(170, 0.95);
             sleep(300);
 
             // Raise linear slide
