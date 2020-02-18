@@ -60,24 +60,51 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             else if (position == 2){
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(18,1,true);
+                du.strafeLeftDistance(22,0.3,true);
+
                 // Move forward to line up with the block
+                du.log ("AngleOff","" + du.getAngle());
                 du.log("BEFORE", "Grab stone");
-                du.moveWithEncoder(51, 1, true);
+                du.moveWithEncoder(57, 1, true);
             }
             else{
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
                 du.strafeLeftDistance(44,1,true);
+
                 // Move forward to line up with the block
                 du.log("BEFORE", "Grab stone");
                 du.moveWithEncoder(51, 1, true);
             }
             // Drop the claw to move the block
+            du.log("BEFORE WE MOVE INTAKE", "");
             du.moveIntake(DriveUtility.CLAW_CLOSE);
+            sleep(200);
+
+            //move linear slide up
+            du.moveLinearSlideWithRunUsingEncoders(2);
 
             // Move backwards
+            du.log("BEFORE", "Move backwards after we grab block");
             du.moveWithEncoder(-18, SPEED);
+
+            //strafe towards foundation
+            du.log("BEFORE", "Strafe towards foundation");
+            du.strafeRightDistance(192, 0.95);
+
+            // Raise linear slide
+            du.moveLinearSlideWithEncoders(10);
+
+            // Move forward towards foundation
+            du.log("BEFORE", "Move forward towards foundation");
+            du.moveWithEncoder(40, 0.5);
+
+            // Lower foundation claws to grab foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+            sleep(200);
+
+            // Drop stone in foundation
+            du.moveIntake(DriveUtility.CLAW_OPEN);
 
             sleep(10000);
             telemetry.update();

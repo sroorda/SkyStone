@@ -296,7 +296,7 @@ public class DriveUtility {
         for(DcMotor m : motorList ) {
             m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            //m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         }
         int roundedDistance = (int)Math.round(distance * TICKS_PER_CM);
@@ -318,7 +318,7 @@ public class DriveUtility {
         for(DcMotor m : motorList ) {
             m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            //m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         }
         int roundedDistance = (int)Math.round(distance * TICKS_PER_CM);
@@ -437,13 +437,12 @@ public class DriveUtility {
         linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        int roundedDistance = (int)Math.round(distance * LINEAR_TICKS_PER_CM);
-        linearSlide.setTargetPosition(roundedDistance*-1);
+        double targetDistance = -distance * LINEAR_TICKS_PER_CM;
 
-        linearSlide.setPower(0.5);
+        linearSlide.setPower(-0.5);
         log( "before linear slide position", "" + linearSlide.getCurrentPosition());
-        log( "before linear slide target", "" + linearSlide.getTargetPosition());
-        while (opMode.opModeIsActive() && linearSlide.getCurrentPosition() >= linearSlide.getTargetPosition()+20 ) {
+        log( "before linear slide target", "" + targetDistance);
+        while (opMode.opModeIsActive() && linearSlide.getCurrentPosition() >= targetDistance ) {
             log( "linear slide position", "" + linearSlide.getCurrentPosition());
             telemetry.update();
         }

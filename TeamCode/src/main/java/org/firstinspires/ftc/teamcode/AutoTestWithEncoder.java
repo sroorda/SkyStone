@@ -31,11 +31,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -46,22 +41,6 @@ import java.util.List;
 
 @Autonomous(name="Autonomous Test with Encoders", group="Linear Opmode")
 public class AutoTestWithEncoder extends LinearOpMode {
-    public final static double SPEED = 0.95;
-
-    public static double TICKS_PER_CM = 17.1;
-
-    private DcMotor backLeft = null;
-    private DcMotor frontLeft = null;
-    private DcMotor backRight = null;
-    private DcMotor frontRight = null;
-    private Servo intake = null;
-    private Servo leftClaw = null;
-    private Servo rightClaw = null;
-    private DcMotor linearSlide = null;
-    List<DcMotor> motorList = new ArrayList<DcMotor>();
-
-
-    double powerFactor = 0.3;
 
     @Override
     public void runOpMode() {
@@ -73,7 +52,7 @@ public class AutoTestWithEncoder extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
-
+/*
             du.log("BEFORE", "Move Backwards");
             du.moveWithEncoder(-18, SPEED);
             sleep(300);
@@ -82,7 +61,9 @@ public class AutoTestWithEncoder extends LinearOpMode {
             du.log("BEFORE", "Strafe towards foundation");
             du.strafeRightDistance(170,SPEED);
             sleep(300);
-
+*/
+            du.moveLinearSlideWithRunUsingEncoders(2.5);
+            sleep(5000);
 
 
             telemetry.update();
