@@ -18,7 +18,9 @@ public class SkystoneTeleOp extends LinearOpMode {
   private DcMotor backRight;
   private DcMotor linearSlide;
   private boolean isClawDown;
+  private boolean isCapstoneOnStone;
   private Servo capstone;
+  private Servo capstone2;
 
   /**
    * This function is executed when this Op Mode is selected from the Driver Station.
@@ -34,6 +36,7 @@ public class SkystoneTeleOp extends LinearOpMode {
     backRight = hardwareMap.dcMotor.get("backRight");
     linearSlide = hardwareMap.dcMotor.get("linearSlide");
     capstone = hardwareMap.servo.get("capstone");
+    capstone2 = hardwareMap.servo.get("capstone2");
 
     // Put initialization blocks here.
 
@@ -41,6 +44,7 @@ public class SkystoneTeleOp extends LinearOpMode {
     leftClaw.setPosition(1);
     intake.setPosition(0);
     isClawDown = true;
+    isCapstoneOnStone = true;
     rightClaw.setPosition(0);
     capstone.setPosition(1);
     boolean isBPressed = false;
@@ -62,6 +66,7 @@ public class SkystoneTeleOp extends LinearOpMode {
         backRight.setPower(-(drive - (strafe + rotate)));
         //intake.setPosition(-gamepad2.right_stick_y);
         moveIntakeWithBumper(timeSinceLastPress);
+        moveNewCapstone(timeSinceLastPress);
         if (gamepad1.left_trigger == 1) {
           strafe_left(wheelsPowerFactor * 1.5);
         }
@@ -100,18 +105,18 @@ public class SkystoneTeleOp extends LinearOpMode {
         }
 
         if (gamepad2.left_trigger == 1) {
-            // intake claw open
-            intake.setPosition(1);
-            isClawDown = false;
+          // intake claw open
+          intake.setPosition(1);
+          isClawDown = false;
 
-            // foundation claws closed
-            leftClaw.setPosition(1);
-            rightClaw.setPosition(0);
-            isBPressed = true;
+          // foundation claws closed
+          leftClaw.setPosition(1);
+          rightClaw.setPosition(0);
+          isBPressed = true;
 
-            // capstone dumped
-            capstone.setPosition(0);
-            isAPressed = true;
+          // capstone dumped
+          capstone.setPosition(0);
+          isAPressed = true;
         }
 
         linearSlide.setPower(gamepad2.left_stick_y * .75);
@@ -139,6 +144,20 @@ public class SkystoneTeleOp extends LinearOpMode {
     }
 
   }
+
+  private void moveNewCapstone (ElapsedTime timeSinceLastPress) {
+    if (gamepad2.right_trigger == 1 && timeSinceLastPress.milliseconds() >= 750) {
+      if (isCapstoneOnStone == false) {
+        capstone2.setPosition(0);
+        isCapstoneOnStone = true;
+      } else {
+        capstone2.setPosition(1);
+        isCapstoneOnStone = false;
+      }
+      timeSinceLastPress.reset();
+    }
+  }
+
   /**
    * Describe this function...
    */

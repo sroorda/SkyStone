@@ -51,7 +51,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             du.moveWithEncoder(28, 1, true);
             sleep(200);
-            int position = du.tensorFlow();
+            int position = 2;//du.tensorFlow();
             if (position == 1){
                 // Move forward to line up with the block
                 du.log("BEFORE", "Move to Stone");
@@ -65,7 +65,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
                 // Move forward to line up with the block
                 du.log ("AngleOff","" + du.getAngle());
                 du.log("BEFORE", "Grab stone");
-                du.moveWithEncoder(57, 1, true);
+                du.moveWithEncoder(45, 1, false);
             }
             else{
                 // Strafe to the second block
@@ -93,7 +93,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             du.strafeRightDistance(192, 0.95);
 
             // Raise linear slide
-            du.moveLinearSlideWithEncoders(10);
+            du.moveLinearSlideWithRunUsingEncoders(10);
 
             // Move forward towards foundation
             du.log("BEFORE", "Move forward towards foundation");

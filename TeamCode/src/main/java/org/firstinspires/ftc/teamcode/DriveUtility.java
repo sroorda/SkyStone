@@ -549,7 +549,7 @@ public class DriveUtility {
             }
 
             setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);
-            opMode.sleep(50);
+            //opMode.sleep(50);
             opMode.idle();
             //log("busy:", backLeft.isBusy() + "," + frontLeft.isBusy()+ "," + backRight.isBusy()+ "," + frontRight.isBusy());
             //log("position:", backLeft.getCurrentPosition() + "," + frontLeft.getCurrentPosition()+ "," + backRight.getCurrentPosition()+ "," + frontRight.getCurrentPosition() );
