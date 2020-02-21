@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -341,6 +342,7 @@ public class DriveUtility {
         double blPower = rotate;
         double frPower = rotate;
         double brPower = rotate;
+        log("ROTATION ANGLE BEFORE", "" + getAngle());
         setMotorSpeeds(1, flPower, blPower, frPower, brPower);
         try {
             Thread.sleep(milliseconds);
@@ -348,6 +350,7 @@ public class DriveUtility {
             e.printStackTrace();
         }
         setMotorSpeeds(1, 0, 0, 0, 0);
+        log("ROTATION ANGLE AFTER", "" + getAngle());
 
     }
 
@@ -370,7 +373,84 @@ public class DriveUtility {
         setMotorSpeeds(1, 0, 0, 0, 0);
 
     }
-    
+
+    // RESET ANGLE FUNCTION
+    private void resetAngle()
+    {
+        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        globalAngle = 0;
+    }
+
+    //ROTATE FUNCTION
+    /**
+     * Rotate left or right the number of degrees. Does not support turning more than 180 degrees.
+     * @param degrees Degrees to turn, + is left - is right
+     */
+    public void rotate(int degrees, double rotate)
+    {
+        for(DcMotor m : motorList ) {
+            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        double  flPower, blPower, frPower, brPower;
+
+        // restart imu movement tracking.
+        resetAngle();
+
+        // getAngle() returns + when rotating counter clockwise (left) and - when rotating
+        // clockwise (right).
+
+        if (degrees < 0)
+        {   // turn right.
+            flPower = rotate;
+            blPower = rotate;
+            frPower = rotate;
+            brPower = rotate;
+        }
+        else if (degrees > 0)
+        {   // turn left.
+            flPower = -rotate;
+            blPower = -rotate;
+            frPower = -rotate;
+            brPower = -rotate;
+        }
+        else return;
+
+        // set power to rotate.
+        setMotorSpeeds(1, flPower, blPower, frPower, brPower);
+
+        // rotate until turn is completed.
+        if (degrees < 0)
+        {
+            log("rotate", "turning clockwise (right, -)");
+            // On right turn we have to get off zero first.
+            double angle = getAngle();
+            while (opMode.opModeIsActive() && angle == 0) {
+                log("rotate clockwise,0", "getAngle=" +getAngle());
+                angle = getAngle();
+            }
+
+            while (opMode.opModeIsActive() && angle > degrees) {
+                log("rotate clockwise, not 0", "getAngle=" +getAngle());
+                angle = getAngle();
+            }
+        }
+        else {   // left turn.
+            log("rotate", "turning counter-clockwise (left, +)");
+            while (opMode.opModeIsActive() && getAngle() < degrees) {}
+        }
+
+        // turn the motors off.
+        setMotorSpeeds(1,0,0,0,0);
+
+        log("rotate", "end of method angle: " + getAngle());
+
+        // reset angle tracking on new heading.
+        resetAngle();
+    }
     
     // SERVO FUNCTIONS
     public void moveIntake(double position) {
@@ -443,6 +523,25 @@ public class DriveUtility {
         log( "before linear slide position", "" + linearSlide.getCurrentPosition());
         log( "before linear slide target", "" + targetDistance);
         while (opMode.opModeIsActive() && linearSlide.getCurrentPosition() >= targetDistance ) {
+            log( "linear slide position", "" + linearSlide.getCurrentPosition());
+            telemetry.update();
+        }
+        linearSlide.setPower(0);
+
+    }
+
+    public void moveLinearSlideWithRunUsingEncodersDown(double distance) {
+
+        log("function has been called","");
+        linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        double targetDistance = distance * LINEAR_TICKS_PER_CM;
+
+        linearSlide.setPower(0.5);
+        log( "before linear slide position", "" + linearSlide.getCurrentPosition());
+        log( "before linear slide target", "" + targetDistance);
+        while (opMode.opModeIsActive() && linearSlide.getCurrentPosition() <= targetDistance ) {
             log( "linear slide position", "" + linearSlide.getCurrentPosition());
             telemetry.update();
         }

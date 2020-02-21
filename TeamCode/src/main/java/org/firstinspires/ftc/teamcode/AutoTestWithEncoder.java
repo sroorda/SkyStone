@@ -52,19 +52,9 @@ public class AutoTestWithEncoder extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
-/*
-            du.log("BEFORE", "Move Backwards");
-            du.moveWithEncoder(-18, SPEED);
-            sleep(300);
 
-            // Strafe towards foundation
-            du.log("BEFORE", "Strafe towards foundation");
-            du.strafeRightDistance(170,SPEED);
-            sleep(300);
-*/
-            du.moveLinearSlideWithRunUsingEncoders(2.5);
-            sleep(5000);
-
+           du.rotate(-65,0.5);
+           sleep(10000);
 
             telemetry.update();
 
