@@ -1,14 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.graphics.Bitmap;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
+import com.qualcomm.robotcore.util.ThreadPool;
+import com.vuforia.Frame;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.function.Consumer;
+import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -17,9 +23,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DriveUtility {
     public final static int CLAW_OPEN = 1;
@@ -707,6 +718,68 @@ public class DriveUtility {
         return globalAngle;
     }
 
+    /**
+     * Method retrieved from
+     * https://github.com/FIRST-Tech-Challenge/SkyStone/blob/14ac54abab5dbf05fe2f2ac7ad7e601e7dd710bd/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptVuforiaNavigationWebcam.java#L438
+     *
+     */
+
+    int captureCounter = 0;
+    File captureDirectory = AppUtil.ROBOT_DATA_DIR;
+
+    /**
+     * Sample one frame from the Vuforia stream and write it to a .PNG image file on the robot
+     * controller in the /sdcard/FIRST/data directory. The images can be downloaded using Android
+     * Studio's Device File Explorer, ADB, or the Media Transfer Protocol (MTP) integration into
+     * Windows Explorer, among other means. The images can be useful during robot design and calibration
+     * in order to get a sense of what the camera is actually seeing and so assist in camera
+     * aiming and alignment.
+     */
+    void captureFrameToFile(final List<Recognition> recognitions) {
+        vuforia.getFrameOnce(Continuation.create(ThreadPool.getDefault(), new Consumer<Frame>()
+        {
+            @Override public void accept(Frame frame)
+            {
+                Bitmap bitmap = vuforia.convertFrameToBitmap(frame);
+                if (bitmap != null) {
+                    File file = new File(captureDirectory, String.format(Locale.getDefault(), "VuforiaFrame-%d.png", captureCounter++));
+                    try {
+                        FileOutputStream outputStream = new FileOutputStream(file);
+                        try {
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+                        } finally {
+                            outputStream.close();
+                            RobotLog.a("captured %s", file.getName());
+                        }
+                    } catch (IOException e) {
+                        RobotLog.ee("CaptureFrameToFile", e, "exception in captureFrameToFile()");
+                    }
+
+                    // write out the recognitions and their details in a file so we can draw the bounding boxes later
+                    File recogFile = new File(captureDirectory, String.format(Locale.getDefault(), "Recognitions-%d.png", captureCounter++));
+                    StringBuilder sb = new StringBuilder();
+                    for( Recognition r : recognitions ) {
+                        sb.append(String.format("%d,", r.getLabel()));
+                        sb.append(String.format("(%d,), ", "%.03f , %.03f", r.getLeft(), r.getTop()));
+                        sb.append(String.format("(%d,), ", "%.03f , %.03f", r.getRight(), r.getBottom()));
+                        sb.append("\n");
+                    }
+                    try {
+                        FileOutputStream outputStream = new FileOutputStream(recogFile);
+                        try {
+                            outputStream.write(sb.toString().getBytes());
+                            outputStream.flush();
+                        } finally {
+                            outputStream.close();
+                            RobotLog.a("captured %s", recogFile.getName());
+                        }
+                    } catch (IOException e) {
+                        RobotLog.ee("CaptureFrameToFile", e, "exception in captureFrameToFile()");
+                    }
+                }
+            }
+        }));
+    }
 }
     
     
