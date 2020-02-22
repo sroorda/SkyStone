@@ -44,18 +44,29 @@ public class SkystoneAutoParkRed extends LinearOpMode {
         du.moveIntake(DriveUtility.CLAW_OPEN);
         du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
 
+
         waitForStart();
         du.moveIntake(0.5);
 
         if (opModeIsActive()) {
+            double foundationDelivery1 = 0;
+            double quarry = 0;
+            double foundationDelivery2 = 0;
+
 
             du.moveWithEncoder(28, 1, true);
             sleep(200);
-            int position = 2;//du.tensorFlow();
+            int position = du.tensorFlow();
+
+            //systone recognition code
             if (position == 1){
                 // Move forward to line up with the block
                 du.log("BEFORE", "Move to Stone");
                 du.moveWithEncoder(51, 1, true);
+
+                foundationDelivery1 = 170;
+                quarry = -230;
+                foundationDelivery2 = 230;
             }
             else if (position == 2){
                 // Strafe to the second block
@@ -66,6 +77,10 @@ public class SkystoneAutoParkRed extends LinearOpMode {
                 du.log ("AngleOff","" + du.getAngle());
                 du.log("BEFORE", "Grab stone");
                 du.moveWithEncoder(45, 1, false);
+
+                foundationDelivery1 = 200;
+                quarry = -260;
+                foundationDelivery2 = 233;
             }
             else{
                 // Strafe to the second block
@@ -75,7 +90,14 @@ public class SkystoneAutoParkRed extends LinearOpMode {
                 // Move forward to line up with the block
                 du.log("BEFORE", "Grab stone");
                 du.moveWithEncoder(51, 1, true);
+
+                foundationDelivery1 = 235;
+                quarry = -265;
+                foundationDelivery2 = 265;
             }
+
+
+
             // Drop the claw to move the block
             du.log("BEFORE WE MOVE INTAKE", "");
             du.moveIntake(DriveUtility.CLAW_CLOSE);
@@ -90,8 +112,8 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             //strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
-            du.rotate(-67, .5);
-            du.moveWithEncoder(200,1, false);  // POSITION
+            du.rotate(-69, .5);
+            du.moveWithEncoder(foundationDelivery1,1, false);  // POSITION foundation delivery 1
             du.rotate(67,0.5);
 
             // Raise linear slide
@@ -105,32 +127,38 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             du.moveIntake(DriveUtility.CLAW_OPEN);
 
             //move backwards after dropping stone in foundation
-            du.moveWithEncoder(-18, 1, false);
+            du.moveWithEncoder(-22, 1, false);
 
             //lower linear slide
-            du.moveLinearSlideWithRunUsingEncodersDown(6);
+            du.moveLinearSlideWithRunUsingEncodersDown(13);
 
             //turn and move forward to second stone
-            du.rotate(70, 0.5);
-            du.moveWithEncoder(260,1,false); // POSITION
+            du.rotate(-67, 0.5);
+            du.log("BEFORE", "ANGLE CORRECT");
+            du.angleCorrect();
+            du.log("AFTER", "ANGLE CORRECT");
+
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+            du.moveWithEncoder(quarry,1,false); // POSITION quarry
 
             //rotate to face the 2nd skystone
-            du.rotate(-67, 0.5);
-
+            du.moveIntake(DriveUtility.CLAW_OPEN);
+            du.rotate(67, 0.5);
+/*
             //move forward to grab 2nd block
-            du.moveWithEncoder(20,1,false);
+            du.moveWithEncoder(25,1,false);
 
             //grab the 2nd block
             du.moveIntake(DriveUtility.CLAW_CLOSE);
             sleep(300);
-            du.moveLinearSlideWithRunUsingEncoders(5);
+            du.moveLinearSlideWithRunUsingEncoders(2);
 
             // back up
             du.moveWithEncoder(-20,1,false);
 
             //move forward to get to the foundation
             du.rotate(-80, .5);
-            du.moveWithEncoder(233,1, false); // POSITION
+            du.moveWithEncoder(foundationDelivery2,1, false); // POSITION foundation delivery 2
             du.rotate(67, .5);
 
             //move forward to grab the foundation

@@ -31,7 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 /**
  * Autonomous sample of moving with time vs moving with encoders
@@ -42,22 +42,53 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 @Autonomous(name="Autonomous Test with Encoders", group="Linear Opmode")
 public class AutoTestWithEncoder extends LinearOpMode {
 
+    private DistanceSensor leftSensor;
+    private DistanceSensor rightSensor;
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized v5");
         telemetry.update();
+/*
+        leftSensor = hardwareMap.get(DistanceSensor.class, "leftSensor");
+        double leftSensorDist = -1;
+        double rightSensorDist = -1;
+        double surfaceAngle = 0;
+        double adjacentDist = 24.8; // in cm
+        double oppositeDist = 0;
+        rightSensor = hardwareMap.get(DistanceSensor.class, "rightSensor");
+*/
 
         DriveUtility du = new DriveUtility(hardwareMap, telemetry, this);
-        //////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////
         waitForStart();
 
-        if (opModeIsActive()) {
+        double opmodeAngle = 0;
+        while (opModeIsActive()) {
+            du.angleCorrect();
+/*
+            opmodeAngle = du.distSensorsAngle();
+            telemetry.addData("  angle", String.format("%.01f deg", opmodeAngle));
 
-           du.rotate(-65,0.5);
-           sleep(10000);
 
+            leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
+            rightSensorDist = rightSensor.getDistance(DistanceUnit.CM);
+
+            if ((leftSensorDist > 50) || (rightSensorDist > 50)) {
+
+            } else {
+                oppositeDist = rightSensorDist - leftSensorDist;
+                surfaceAngle = Math.toDegrees(Math.atan(oppositeDist / adjacentDist));
+
+            }
+
+            telemetry.addData("opp", String.format("%.01f cm", oppositeDist));
+            telemetry.addData("adj", String.format("%.01f cm", adjacentDist));
+            telemetry.addData("L range", String.format("%.01f cm", leftSensorDist));
+            telemetry.addData("R range", String.format("%.01f cm", rightSensorDist));
+            telemetry.addData("  angle", String.format("%.01f deg", surfaceAngle));
+*/
             telemetry.update();
-
         }
     }
 }

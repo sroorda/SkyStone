@@ -594,6 +594,8 @@ public class CoachUtility {
         leftClaw = hardwareMap.servo.get("leftClaw");
         rightClaw = hardwareMap.servo.get("rightClaw");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+
     }
 
     protected void log(String caption, String message) {

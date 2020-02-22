@@ -4,8 +4,8 @@ import android.graphics.Bitmap;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -20,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
@@ -70,6 +71,8 @@ public class DriveUtility {
     private Servo leftClaw = null;
     private Servo rightClaw = null;
     private DcMotor linearSlide = null;
+    private DistanceSensor leftSensor = null;
+    private DistanceSensor rightSensor = null;
     List<DcMotor> motorList = new ArrayList<DcMotor>();
     BNO055IMU imu;
     Orientation             lastAngles = new Orientation();
@@ -78,6 +81,7 @@ public class DriveUtility {
     HardwareMap hardwareMap = null;
     Telemetry telemetry = null;
     LinearOpMode opMode = null;
+
 
     
     double powerFactor = 1;
@@ -527,6 +531,8 @@ public class DriveUtility {
         log("function has been called","");
         linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        linearSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
         double targetDistance = -distance * LINEAR_TICKS_PER_CM;
 
@@ -782,6 +788,9 @@ public class DriveUtility {
         leftClaw = hardwareMap.servo.get("leftClaw");
         rightClaw = hardwareMap.servo.get("rightClaw");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        leftSensor = hardwareMap.get(DistanceSensor.class, "leftSensor");
+        rightSensor = hardwareMap.get(DistanceSensor.class, "rightSensor");
     }
 
     protected void log(String caption, String message) {
@@ -878,6 +887,81 @@ public class DriveUtility {
                 }
             }
         }));
+    }
+
+    public double distSensorsAngle(){
+
+        double leftSensorDist = -1;
+        double rightSensorDist = -1;
+        double surfaceAngle = 0;
+        double adjacentDist = 36; // in cm
+        double oppositeDist = 0;
+
+        leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
+        rightSensorDist = rightSensor.getDistance(DistanceUnit.CM);
+
+        if((leftSensorDist > 50) || (rightSensorDist > 50)) {
+            surfaceAngle = Double.NaN;
+        }
+        else {
+            oppositeDist = rightSensorDist - leftSensorDist;
+            surfaceAngle = Math.toDegrees(Math.atan(oppositeDist/adjacentDist));
+
+        }
+
+        return surfaceAngle;
+
+        //telemetry.addData("opp", String.format("%.01f cm", oppositeDist));
+        //telemetry.addData("adj", String.format("%.01f cm", adjacentDist));
+        //telemetry.addData("L range", String.format("%.01f cm", leftSensorDist));
+        //telemetry.addData("R range", String.format("%.01f cm", rightSensorDist));
+        //telemetry.addData("  angle", String.format("%.01f deg", surfaceAngle));
+
+    }
+
+    public void sensorCorrection( double speed, double fudgeAngle, long timeToRotate) {
+        double angleWeAreOffBy = distSensorsAngle();
+
+        if (angleWeAreOffBy < fudgeAngle) {
+            rotateRight(timeToRotate, speed);
+            log("ANGLE", "" + angleWeAreOffBy);
+            //opMode.sleep(1000);
+
+        } else if (angleWeAreOffBy > fudgeAngle) {
+            rotateLeft(timeToRotate, speed);
+            log("ANGLE", "" + angleWeAreOffBy);
+            //opMode.sleep(1000);
+
+        }else{
+            rotateLeft(1, 0);
+            log("ANGLE AFTER WE STOP", "" + angleWeAreOffBy);
+            //opMode.sleep(1000);
+
+        }
+    }
+
+    public void angleCorrect () {
+        double ourAngle = distSensorsAngle();
+        log("angle", "" + ourAngle);
+        if (ourAngle < 2) {
+            while (ourAngle < -2) {
+
+                rotateRight(10, 0.3);
+                ourAngle = distSensorsAngle();
+                log("angle", "" + ourAngle);
+                log("rotate", "right");
+            }
+        } else if (ourAngle > 2) {
+
+            while (ourAngle > 2) {
+                rotateLeft(10, 0.3);
+                ourAngle = distSensorsAngle();
+                log("angle", "" + ourAngle);
+                log("rotate", "left");
+            }
+        } else {
+
+        }
     }
 }
     
