@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 @Autonomous(name="SkystoneAutoParkRed", group="Linear Opmode")
 
 public class SkystoneAutoParkRed extends LinearOpMode {
-    public final static double SPEED = 0.75;
+    public final static double SPEED = 1;
     public void runOpMode() {
         telemetry.addData("Status", "Initialized v13");
         telemetry.update();
@@ -61,8 +61,6 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             //systone recognition code
             if (position == 1){
                 // Move forward to line up with the block
-                du.log("BEFORE", "Move to Stone");
-                du.moveWithEncoder(51, 1, true);
 
                 foundationDelivery1 = 170;
                 quarry = -230;
@@ -71,12 +69,11 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             else if (position == 2){
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(22,0.3,true);
+                du.strafeLeftDistance(22,0.3,false);
 
                 // Move forward to line up with the block
                 du.log ("AngleOff","" + du.getAngle());
-                du.log("BEFORE", "Grab stone");
-                du.moveWithEncoder(45, 1, false);
+
 
                 foundationDelivery1 = 200;
                 quarry = -260;
@@ -85,17 +82,18 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             else{
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(44,1,true);
+                du.strafeLeftDistance(44,.3,true);
 
                 // Move forward to line up with the block
-                du.log("BEFORE", "Grab stone");
-                du.moveWithEncoder(51, 1, true);
+
 
                 foundationDelivery1 = 235;
                 quarry = -265;
                 foundationDelivery2 = 265;
             }
-
+            du.log ("AngleOff","" + du.getAngle());
+            du.log("BEFORE", "Grab stone");
+            du.moveWithEncoder(45, 1, false);
 
 
             // Drop the claw to move the block
@@ -108,21 +106,59 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             // Move backwards
             du.log("BEFORE", "Move backwards after we grab block");
-            du.moveWithEncoder(-20,SPEED);
+            du.moveWithEncoder(-14,SPEED);
 
             //strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
-            du.rotate(-69, .5);
+            du.rotateViaIMUToAngle(90);
             du.moveWithEncoder(foundationDelivery1,1, false);  // POSITION foundation delivery 1
-            du.rotate(67,0.5);
 
             // Raise linear slide
             du.moveLinearSlideWithRunUsingEncoders(13);
+            du.rotateViaIMUToAngle(0);
 
             // Move forward towards foundation
             du.log("BEFORE", "Move forward towards foundation");
-            du.moveWithEncoder(20, 0.5);
+            du.moveWithEncoder(17, 0.5);
 
+            //place stone in foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+            sleep(300);
+            du.moveLinearSlideWithRunUsingEncodersDown(13);
+            du.moveIntake(DriveUtility.CLAW_OPEN);
+
+            //move foundation into building zone
+            du.log("BEFORE", "Rotate slowly a little");
+            du.rotateRight(500, 0.3);
+
+            //move backwards to the wall
+            du.log("BEFORE", "Move backwards to wall");
+            du.moveWithEncoder(-75, SPEED);
+
+            //rotate right to rotate foundation
+            du.log("BEFORE", "Rotate right to rotate foundation");
+            du.rotateRight(1500, 0.4);
+            //sleep(300);
+
+            //move forward and push foundation against wall
+            du.log("BEFORE", "Move forward and push foundation against wall");
+            du.moveWithEncoder(100,SPEED);
+
+            //open the foundation claws so we let go of the foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
+            //sleep(300);
+
+            //move backwards half way
+            du.moveWithEncoder(-47.5, SPEED, true);
+            du.log("Start Linear Slide", "");
+
+            //strafe left to park in the spot closest to the middle bridge
+            du.strafeLeftDistance(40, SPEED, true);
+
+            //back up the rest of the way
+            du.moveWithEncoder(-47.5, SPEED, true);
+
+ /*
             // Drop stone in foundation
             du.moveIntake(DriveUtility.CLAW_OPEN);
 

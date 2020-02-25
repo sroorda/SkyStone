@@ -33,77 +33,149 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
-
-
-@Autonomous(name="CoachWrightAutoTests", group="Linear Opmode")
+@Autonomous(name="CoachWTestAuto", group="Linear Opmode")
 
 public class CoachWrightAutoTests extends LinearOpMode {
-    public final static double SPEED = 0.95;
+    public final static double SPEED = 0.75;
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized v6");
+        telemetry.addData("Status", "Initialized v13");
         telemetry.update();
-        CoachUtility du = new CoachUtility(hardwareMap,telemetry,this);
+        DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
         du.moveIntake(DriveUtility.CLAW_OPEN);
         du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
 
+
         waitForStart();
+        du.moveIntake(0.5);
 
         if (opModeIsActive()) {
 
-            du.log("BEFORE", "Move Backwards");
-            du.moveWithEncoder(-18, SPEED);
-            sleep(300);
+            //du.angleCorrectIMU(-90);
 
-            // Strafe towards foundation
-            du.log("BEFORE", "Strafe towards foundation");
-            du.strafeRightDistance(170,SPEED);
-            sleep(300);
+            du.rotateViaIMUToAngle(90);
+            /*double foundationDelivery1 = 0;
+            double quarry = 0;
+            double foundationDelivery2 = 0;
 
 
-            /*du.moveIntake(CoachUtility.CLAW_CLEAR_BLOCK);
+            du.moveWithEncoder(28, 1, false);
+            sleep(200);
+            int position = du.tensorFlow();
 
-            // Move forward to line up with first block
-            du.log("BEFORE", "Move to Stone");
-            du.moveWithEncoder(74, .3);
+            //systone recognition code
+            if (position == 1){
+                // Move forward to line up with the block
+                du.log("BEFORE", "Move to Stone");
+                du.moveWithEncoder(51, 1, true);
+
+                foundationDelivery1 = 170;
+                quarry = -230;
+                foundationDelivery2 = 230;
+            }
+            else if (position == 2){
+                // Strafe to the second block
+                du.log("BEFORE STRAFE LEFT", "Move to stone");
+                du.strafeLeftDistance(22,0.3,true);
+                du.log("BEFORE ANGLE CORRECT", "Angle correct before grab");
+                //du.angleCorrect();
+                du.angleCorrectIMU(0);
+                // Move forward to line up with the block
+                du.log("BEFORE", "Grab stone");
+                du.moveWithEncoder(40, 1, false);
+
+                foundationDelivery1 = 40;//200;
+                quarry = -260;
+                foundationDelivery2 = 233;
+            }
+            else{
+                // Strafe to the second block
+                du.log("BEFORE STRAFE LEFT", "Move to stone");
+                du.strafeLeftDistance(44,1,true);
+
+                // Move forward to line up with the block
+                du.log("BEFORE", "Grab stone");
+                du.moveWithEncoder(51, 1, true);
+
+                foundationDelivery1 = 235;
+                quarry = -265;
+                foundationDelivery2 = 265;
+            }
+
+
 
             // Drop the claw to move the block
-            du.moveIntake(CoachUtility.CLAW_CLOSE);
-            sleep(500);
+            du.log("BEFORE WE MOVE INTAKE", "");
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+            sleep(300);
 
-
-            // Move linear slide to prevent stone from slipping
-            du.moveLinearSlideWithEncoders(3);
-            sleep(100);
+            //move linear slide up
+            du.moveLinearSlideWithRunUsingEncoders(2);
 
             // Move backwards
-            du.log("BEFORE", "Move Backwards");
-            du.moveWithEncoder(-18, SPEED);
-            sleep(300);
+            du.log("BEFORE", "Move backwards after we grab block");
+            du.moveWithEncoder(-18,SPEED); //coach
 
-            // Strafe towards foundation
+            //strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
-            du.strafeRightDistance(170, 0.8);
-            sleep(300);
+            du.rotate(-67, .5); //coach
+            du.log("BEFORE", "angle correct imu 2");
+            du.angleCorrectIMU(90);
+            du.moveWithEncoder(foundationDelivery1,1, false);  // POSITION foundation delivery 1
+     /*
+            du.rotate(67,0.5);
 
             // Raise linear slide
-            du.moveLinearSlideWithEncoders(10);
-            sleep(300);
+            du.moveLinearSlideWithRunUsingEncoders(15); //coach
 
             // Move forward towards foundation
             du.log("BEFORE", "Move forward towards foundation");
-            du.moveWithEncoder(40, 0.5);
-            //sleep(300);
-
-            // Lower foundation claws to grab foundation
-            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
-            sleep(500);
+            du.moveWithEncoder(20, 0.5); //coach
 
             // Drop stone in foundation
             du.moveIntake(DriveUtility.CLAW_OPEN);
-            sleep(500);
-            long msToSleepUntilEnd = Math.round((29.9-getRuntime())*1000);
-            sleep(msToSleepUntilEnd);
-            //rotate right slowly a little
+
+            //move backwards after dropping stone in foundation
+            du.moveWithEncoder(-22, 1, false);
+
+            //lower linear slide
+            du.moveLinearSlideWithRunUsingEncodersDown(13);
+
+            //turn and move forward to second stone
+            du.rotate(-67, 0.5);
+            du.log("BEFORE", "ANGLE CORRECT");
+            du.angleCorrect();
+            du.log("AFTER", "ANGLE CORRECT");
+
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+            du.moveWithEncoder(quarry,1,false); // POSITION quarry
+
+            //rotate to face the 2nd skystone
+            du.moveIntake(DriveUtility.CLAW_OPEN);
+            du.rotate(67, 0.5);
+/*
+            //move forward to grab 2nd block
+            du.moveWithEncoder(25,1,false);
+
+            //grab the 2nd block
+            du.moveIntake(DriveUtility.CLAW_CLOSE);
+            sleep(300);
+            du.moveLinearSlideWithRunUsingEncoders(2);
+
+            // back up
+            du.moveWithEncoder(-20,1,false);
+
+            //move forward to get to the foundation
+            du.rotate(-80, .5);
+            du.moveWithEncoder(foundationDelivery2,1, false); // POSITION foundation delivery 2
+            du.rotate(67, .5);
+
+            //move forward to grab the foundation
+            du.moveLinearSlideWithRunUsingEncoders(13);
+            du.moveWithEncoder(15,1,false);
+            du.moveIntake(DriveUtility.CLAW_OPEN);
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+/*
+            //move foundation into building zone
             du.log("BEFORE", "Rotate slowly a little");
             du.rotateRight(500, 0.3);
 
@@ -142,8 +214,8 @@ public class CoachWrightAutoTests extends LinearOpMode {
             sleep(300);
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
 
-            sleep(3000);*/
-
+*/
+            sleep(3000);
             telemetry.update();
 
         }
