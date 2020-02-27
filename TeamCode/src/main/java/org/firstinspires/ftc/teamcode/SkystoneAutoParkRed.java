@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 public class SkystoneAutoParkRed extends LinearOpMode {
     public final static double SPEED = 1;
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized v13");
+        telemetry.addData("Status", "Initialized v14");
         telemetry.update();
         DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
         du.moveIntake(DriveUtility.CLAW_OPEN);
@@ -62,7 +62,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             if (position == 1){
                 // Move forward to line up with the block
 
-                foundationDelivery1 = 170;
+                foundationDelivery1 = 200;
                 quarry = -230;
                 foundationDelivery2 = 230;
             }
@@ -149,14 +149,16 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             //sleep(300);
 
             //move backwards half way
-            du.moveWithEncoder(-47.5, SPEED, true);
-            du.log("Start Linear Slide", "");
+            du.log("BEFORE", "Move backwards half way");
+            du.moveWithEncoder(-47.5, SPEED, false);
 
             //strafe left to park in the spot closest to the middle bridge
-            du.strafeLeftDistance(40, SPEED, true);
+            du.log("BEFORE", "Strafe left to line up park");
+            du.strafeLeftDistance(50, SPEED, true);
 
             //back up the rest of the way
-            du.moveWithEncoder(-47.5, SPEED, true);
+            du.log("BEFORE", "Back up under the bridge");
+            du.moveWithEncoder(-63, SPEED, true);
 
  /*
             // Drop stone in foundation
@@ -167,7 +169,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             //lower linear slide
             du.moveLinearSlideWithRunUsingEncodersDown(13);
-
+/*
             //turn and move forward to second stone
             du.rotate(-67, 0.5);
             du.log("BEFORE", "ANGLE CORRECT");

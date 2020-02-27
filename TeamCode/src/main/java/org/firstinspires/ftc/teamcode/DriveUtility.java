@@ -652,8 +652,8 @@ public class DriveUtility {
                     }
                 } */
             }
-            log("Angle", "" + angle);
-            log("Correction value", backCorrection + ", " + frontCorrection);
+            //log("Angle", "" + angle);
+            //log("Correction value", backCorrection + ", " + frontCorrection);
             flPower = flPower * frontCorrection;//.998;
             frPower = frPower * frontCorrection;//.998;
             brPower = brPower * backCorrection; // * backPowerCorrect;
@@ -673,12 +673,12 @@ public class DriveUtility {
             telemetry.update();
 
         }
-        log("Cumaltive angle error: ",cumulativeAngleError+" ");
+
         setMotorSpeeds(0, 0, 0, 0, 0);
     }
 
 
-    private void setMotorSpeeds(double speedFactor, double flPower, double blPower, double frPower, double brPower) {
+    public void setMotorSpeeds(double speedFactor, double flPower, double blPower, double frPower, double brPower) {
         if (speedFactor > 1) {
             speedFactor = 1;
         } else if (speedFactor < 0) {
@@ -762,12 +762,21 @@ public class DriveUtility {
 
 
     // SET POWER FUNCTION
-    public void setPower(double drive, double strafe, double rotate) {
-        frontLeft.setPower(powerFactor*(-drive + strafe + rotate));
-        backLeft.setPower(powerFactor*(-drive - strafe - rotate));
-        frontRight.setPower(powerFactor*(drive - strafe + rotate));
-        backRight.setPower(powerFactor*(drive + strafe - rotate));
-        log("motor powers", frontLeft.getPower() + "," + backLeft.getPower() + "," + frontRight.getPower() + "," + backRight.getPower() );
+    public void setPower() {
+        for(DcMotor m : motorList ) {
+            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        frontLeft.setPower(1);
+        opMode.sleep(1000);
+        backLeft.setPower(1);
+        opMode.sleep(1000);
+        frontRight.setPower(1);
+        opMode.sleep(1000);
+        backRight.setPower(1);
+        opMode.sleep(1000);
     }
 
 
@@ -968,7 +977,7 @@ public class DriveUtility {
         }
     }
 
-    static double IMU_ANGLE_FUDGE = .1; //coach
+    static double IMU_ANGLE_FUDGE = 0.2; //coach
 
     public void angleCorrectIMU (double targetAngle) {
         double ourAngle = -getAngle();
@@ -995,6 +1004,132 @@ public class DriveUtility {
         } else {
             log("[angleCorrectIMU] need to rotate", "none");
         }
+    }
+
+    public void rotateTest(double targetAngle) {
+        double rotationDirection = 0;
+        if(targetAngle < 0) {rotationDirection = 1;}
+        else if(targetAngle > 0) {rotationDirection = -1;}
+
+        double flPower = rotationDirection;
+        double blPower = rotationDirection;
+        double frPower = rotationDirection;
+        double brPower = rotationDirection;
+
+        for(DcMotor m : motorList ) {
+            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        double speedFactor = 1;
+        setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);
+        double avgEncoderVals = 0;
+
+        int c = 20;
+        while(c > 0) {
+            avgEncoderVals = (Math.abs(frontLeft.getCurrentPosition()) + Math.abs(frontRight.getCurrentPosition()) + Math.abs(backLeft.getCurrentPosition()) + Math.abs(backRight.getCurrentPosition()))/4;
+            log("[fix move], encoder", "" + avgEncoderVals);
+            log("[fix move], angle", "" + (-getAngle()));
+            try {
+                Thread.sleep(10);
+                } catch (InterruptedException e) {
+                e.printStackTrace();
+                }
+            c--;
+        }
+        setMotorSpeeds(speedFactor, 0, 0, 0, 0);
+    }
+
+    double returnAngleFromEncoderAtFullSpeedRotate() {
+        double avgEncoderVals = (Math.abs(frontLeft.getCurrentPosition()) + Math.abs(frontRight.getCurrentPosition()) + Math.abs(backLeft.getCurrentPosition()) + Math.abs(backRight.getCurrentPosition()))/4;
+        return 0.1466*avgEncoderVals + 27.73;
+    }
+
+    public void rotateViaIMUToAngleTest(double targetAngle) {
+        /*for(DcMotor m : motorList ) {
+            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+
+
+        setMotorSpeeds(1, 1, 1, 1, 1);
+        while(returnAngleFromEncoderAtFullSpeedRotate() > 40) {
+            try {Thread.sleep(1);} catch (InterruptedException e) {e.printStackTrace();}
+        }*/
+        boolean seek = false;
+        double currentAngle = -getAngle();
+        double proportionalAngleDelta = Math.abs(Math.abs(currentAngle) - Math.abs(targetAngle));
+        double startingAngleDelta = proportionalAngleDelta;
+        double speedFactor = .3;
+        int rotationDirection = 0;
+        double speedFactorProportion = 0.01;
+        log("[Set angle via IMU]","start");
+        while(currentAngle > targetAngle + IMU_ANGLE_FUDGE || currentAngle < targetAngle - IMU_ANGLE_FUDGE) {
+
+
+            if(currentAngle > targetAngle + IMU_ANGLE_FUDGE) {
+                rotationDirection = -1;
+                log("[angleCorrectIMU]", "" + currentAngle);
+                log("[angleCorrectIMU],rotate", "left");
+
+            }
+            else if (currentAngle < targetAngle-IMU_ANGLE_FUDGE) {
+                rotationDirection = 1;
+                log("[angleCorrectIMU]", "" + currentAngle);
+                log("[angleCorrectIMU],rotate", "right");
+            }
+            else
+            {
+                rotationDirection = 0;
+                log("[angleCorrectIMU]", "" + currentAngle);
+                log("[angleCorrectIMU],rotate", "shouldn't be here");
+            }
+
+            for(DcMotor m : motorList ) {
+                m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+
+            double flPower = rotationDirection;
+            double blPower = rotationDirection;
+            double frPower = rotationDirection;
+            double brPower = rotationDirection;
+
+            proportionalAngleDelta = Math.abs(Math.abs(currentAngle) - Math.abs(targetAngle));
+
+            speedFactor = speedFactorProportion*proportionalAngleDelta;
+            if(proportionalAngleDelta > startingAngleDelta*0.75 && !seek) {
+                speedFactor = .6;
+            }
+            else {
+                seek = true;
+                if(proportionalAngleDelta > startingAngleDelta*.6) {speedFactor = 0.5;}
+                else if(proportionalAngleDelta > startingAngleDelta*0.5) {speedFactor = 0.4;}
+                else if(proportionalAngleDelta > startingAngleDelta*0.4) {speedFactor = 0.3;}
+                else if(proportionalAngleDelta > startingAngleDelta*0.1) {speedFactor = 0.2;}
+                else if(proportionalAngleDelta > startingAngleDelta*0.05) {speedFactor = 0.1;}
+                else {speedFactor = 0.1;}
+
+
+                /*if (speedFactor > 0.50) {
+                    speedFactor = 0.5;
+                }
+                if (speedFactor < .1) {
+                    speedFactor = 0.1;
+                }*/
+            }
+            speedFactor = 0.4;
+            setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);
+            /*try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }*/
+
+
+            currentAngle = -getAngle();
+
+        }
+        setMotorSpeeds(1, 0, 0, 0, 0);
     }
 
     public void rotateViaIMUToAngle(double targetAngle) {
@@ -1038,7 +1173,7 @@ public class DriveUtility {
             proportionalAngleDelta = Math.abs(Math.abs(currentAngle) - Math.abs(targetAngle));
 
             speedFactor = speedFactorProportion*proportionalAngleDelta;
-            if(speedFactor > 0.50) {speedFactor = 0.5;}
+            if(speedFactor > 0.40) {speedFactor = 0.4;}
             if(speedFactor < .1) {speedFactor = 0.1;}
 
             setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);

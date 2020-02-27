@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 public class CoachWrightAutoTests extends LinearOpMode {
     public final static double SPEED = 0.75;
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized v13");
+        telemetry.addData("Status", "Initialized v14");
         telemetry.update();
         DriveUtility du = new DriveUtility(hardwareMap,telemetry,this);
         du.moveIntake(DriveUtility.CLAW_OPEN);
@@ -51,8 +51,11 @@ public class CoachWrightAutoTests extends LinearOpMode {
         if (opModeIsActive()) {
 
             //du.angleCorrectIMU(-90);
-
+            //du.rotateTest(80);
+            double starTime = getRuntime();
             du.rotateViaIMUToAngle(90);
+            telemetry.addData("Rotate time", (getRuntime()-starTime));
+            telemetry.update();
             /*double foundationDelivery1 = 0;
             double quarry = 0;
             double foundationDelivery2 = 0;

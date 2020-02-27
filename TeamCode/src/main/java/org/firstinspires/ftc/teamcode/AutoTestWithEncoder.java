@@ -65,7 +65,17 @@ public class AutoTestWithEncoder extends LinearOpMode {
 
         double opmodeAngle = 0;
         while (opModeIsActive()) {
-            du.angleCorrect();
+            du.setPower();
+/*
+            du.setMotorSpeeds(1, 0.3, 0, 0, 0);
+            sleep(1000);
+            du.setMotorSpeeds(1, 0, 0.3, 0, 0);
+            sleep(1000);
+            du.setMotorSpeeds(1, 0, 0, 0.3, 0);
+            sleep(1000);
+            du.setMotorSpeeds(1, 0, 0, 0, 0.3);
+            sleep(1000);
+
 /*
             opmodeAngle = du.distSensorsAngle();
             telemetry.addData("  angle", String.format("%.01f deg", opmodeAngle));
