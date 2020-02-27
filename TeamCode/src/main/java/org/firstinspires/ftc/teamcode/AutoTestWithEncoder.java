@@ -65,7 +65,13 @@ public class AutoTestWithEncoder extends LinearOpMode {
 
         double opmodeAngle = 0;
         while (opModeIsActive()) {
-            du.setPower();
+            du.moveWithEncoder(100, 0.3, true);
+            sleep(1000);
+            du.moveWithEncoder(100, -0.3, true);
+            sleep(1000);
+            du.strafeLeftDistance(100, 0.3, true);
+            sleep(1000);
+            du.strafeRightDistance(100, 0.3, true);
 /*
             du.setMotorSpeeds(1, 0.3, 0, 0, 0);
             sleep(1000);

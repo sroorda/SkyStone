@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 @Autonomous(name="SkystoneAutoParkRed", group="Linear Opmode")
 
 public class SkystoneAutoParkRed extends LinearOpMode {
-    public final static double SPEED = 1;
+    public final static double SPEED = .5;
     public void runOpMode() {
         telemetry.addData("Status", "Initialized v14");
         telemetry.update();
@@ -54,7 +54,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             double foundationDelivery2 = 0;
 
 
-            du.moveWithEncoder(28, 1, true);
+            du.moveWithEncoder(28, SPEED, false);
             sleep(200);
             int position = du.tensorFlow();
 
@@ -82,7 +82,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             else{
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(44,.3,true);
+                du.strafeLeftDistance(44,.3,false);
 
                 // Move forward to line up with the block
 
@@ -93,7 +93,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             }
             du.log ("AngleOff","" + du.getAngle());
             du.log("BEFORE", "Grab stone");
-            du.moveWithEncoder(45, 1, false);
+            du.moveWithEncoder(45, SPEED, false);
 
 
             // Drop the claw to move the block
@@ -106,12 +106,12 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             // Move backwards
             du.log("BEFORE", "Move backwards after we grab block");
-            du.moveWithEncoder(-14,SPEED);
+            du.moveWithEncoder(14,-SPEED);
 
             //strafe towards foundation
             du.log("BEFORE", "Strafe towards foundation");
             du.rotateViaIMUToAngle(90);
-            du.moveWithEncoder(foundationDelivery1,1, false);  // POSITION foundation delivery 1
+            du.moveWithEncoder(foundationDelivery1,SPEED, false);  // POSITION foundation delivery 1
 
             // Raise linear slide
             du.moveLinearSlideWithRunUsingEncoders(13);
@@ -119,7 +119,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             // Move forward towards foundation
             du.log("BEFORE", "Move forward towards foundation");
-            du.moveWithEncoder(17, 0.5);
+            du.moveWithEncoder(17, SPEED);
 
             //place stone in foundation
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
@@ -133,7 +133,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             //move backwards to the wall
             du.log("BEFORE", "Move backwards to wall");
-            du.moveWithEncoder(-75, SPEED);
+            du.moveWithEncoder(75, -SPEED);
 
             //rotate right to rotate foundation
             du.log("BEFORE", "Rotate right to rotate foundation");
@@ -150,7 +150,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             //move backwards half way
             du.log("BEFORE", "Move backwards half way");
-            du.moveWithEncoder(-47.5, SPEED, false);
+            du.moveWithEncoder(47.5, -SPEED, false);
 
             //strafe left to park in the spot closest to the middle bridge
             du.log("BEFORE", "Strafe left to line up park");
@@ -158,7 +158,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
 
             //back up the rest of the way
             du.log("BEFORE", "Back up under the bridge");
-            du.moveWithEncoder(-63, SPEED, true);
+            du.moveWithEncoder(63, -SPEED, true);
 
  /*
             // Drop stone in foundation

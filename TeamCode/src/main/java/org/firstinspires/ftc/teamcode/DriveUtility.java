@@ -292,15 +292,16 @@ public class DriveUtility {
     public void moveWithEncoder(double distance, double speed, boolean fullSpeed) {
         for(DcMotor m : motorList ) {
             m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            m.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
         int roundedDistance = (int)Math.round(distance * TICKS_PER_CM);
+/*
         backLeft.setTargetPosition(-roundedDistance);
         frontLeft.setTargetPosition(-roundedDistance);
         backRight.setTargetPosition(roundedDistance);
         frontRight.setTargetPosition(roundedDistance);
-
+*/
 
         runMotorsUntilPositionRampSpeed(speed, 0, 0, fullSpeed, roundedDistance, STATE_MOVE);
     }
@@ -590,10 +591,10 @@ public class DriveUtility {
 
         //double flPower = -drive + strafe + rotate;
         //double blPower = -drive - strafe - rotate;
-        double flPower = -drive - strafe + rotate;
-        double blPower = -drive + strafe - rotate;
-        double frPower = drive - strafe + rotate;
-        double brPower = drive + strafe - rotate;
+        double flPower = drive - strafe + rotate;
+        double blPower = drive + strafe - rotate;
+        double frPower = -drive - strafe + rotate;
+        double brPower = -drive + strafe - rotate;
         double backCorrection = 1;
         double frontCorrection = 1;
 
@@ -784,12 +785,12 @@ public class DriveUtility {
         // read all the motors from the map
         backLeft  = hardwareMap.get(DcMotor.class, "backLeft");
         motorList.add(backLeft);
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        motorList.add(frontLeft);
+        frontRight = hardwareMap.get(DcMotor.class, "frontLeft");
+        motorList.add(frontRight);
         backRight  = hardwareMap.get(DcMotor.class, "backRight");
         motorList.add(backRight);
-        frontRight  = hardwareMap.get(DcMotor.class, "frontRight");
-        motorList.add(frontRight);
+        frontLeft  = hardwareMap.get(DcMotor.class, "frontRight");
+        motorList.add(frontLeft);
 
         linearSlide = hardwareMap.dcMotor.get("linearSlide");
 
