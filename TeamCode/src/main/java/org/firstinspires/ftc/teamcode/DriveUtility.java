@@ -186,7 +186,7 @@ public class DriveUtility {
     }
 
     //Tensor Flow
-    public int tensorFlow() {
+    public int tensorFlowRed() {
         int position = 1;
 
         if (tfod != null) {
@@ -274,6 +274,96 @@ public class DriveUtility {
         return position;
     }
 
+
+
+    public int tensorFlowBlue() {
+        int position = 1;
+
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null && updatedRecognitions.size() < 2){
+                opMode.sleep(300);
+                updatedRecognitions = tfod.getUpdatedRecognitions();
+                log("recognition", "2nd attempt");
+            }
+            if (updatedRecognitions == null || updatedRecognitions.size() < 2){
+                opMode.sleep(300);
+                updatedRecognitions = tfod.getUpdatedRecognitions();
+                log("recognition", "3rd attempt");
+            }
+
+            if (updatedRecognitions != null) {
+                //captureFrameToFile(updatedRecognitions);
+                log("# Object Detected", "" + updatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                Recognition skystone = null;
+                Recognition rightmost = null;
+                for (Recognition recognition : updatedRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+
+                    if (recognition.getLabel().equals(LABEL_SECOND_ELEMENT)){
+                        skystone = recognition;
+                        telemetry.addData("Found Skystone", "");
+                    }
+
+                    if (rightmost == null){
+                        rightmost = recognition;
+                    }
+                    else{
+                        if (recognition.getRight() > rightmost.getRight()){
+                            rightmost = recognition;
+                        }
+
+                    }
+                }
+                if (skystone != null ){
+                    log("Skystone", "" + skystone.getRight());
+                    log("Rightmost", "" + rightmost.getRight());
+                }
+                else {
+                    log("Skystone", "NULL");
+                    log("Rightmost", "NULL");
+                }
+
+                if (updatedRecognitions.size() <= 1){
+                    log("Skystone Position", "1 (NO OBJECTS FOUND)");
+                    position = 2;
+                }
+                else if (skystone == null){
+                    log("Skystone Position", "3");
+                    telemetry.addData("Skystone is in position 3", "");
+                    position = 3;
+                }
+                else if (skystone.getRight() == rightmost.getRight()){
+                    log("Skystone Position", "2");
+                    telemetry.addData("Skystone is in position 2", "");
+                    position = 2;
+                }
+                else {
+                    log("Skystone Position", "1");
+                    telemetry.addData("Skystone is in position 1", "");
+                    position = 1;
+                }
+                telemetry.update();
+            }
+            else{
+                log("Skystone = Null", "");
+            }
+        }
+        if (tfod != null) {
+            tfod.shutdown();
+        }
+
+        return position;
+    }
+
     //first stone
     public void firstStone(boolean isRed){
         if(isRed){
@@ -320,6 +410,14 @@ public class DriveUtility {
             setMotorSpeeds(1, 0.3, 0.3, -0.3, -0.3);
             distance = rightSensor.getDistance(DistanceUnit.CM);
             log("moveForwardToFoundation", "loop: " + distance);
+            // If we move 70cm break the loop
+            double percentDistance = reachedDistance(850, frontLeft, backLeft, frontRight, backLeft);
+            log("moveForwardToFoundation", "percentDistance: " + percentDistance);
+            if ( percentDistance >= 1){
+                log("moveForwardToFoundation", "BREAKING OUT");
+                break;
+            }
+            telemetry.update();
         }
         setMotorSpeeds(0, 0,0,0 ,0);
     }

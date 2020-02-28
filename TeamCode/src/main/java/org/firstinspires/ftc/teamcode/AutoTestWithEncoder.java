@@ -65,7 +65,7 @@ public class AutoTestWithEncoder extends LinearOpMode {
         double opmodeAngle = 0;
         if (opModeIsActive()) {
 
-            du.moveForwardToFoundation();
+            du.tensorFlowBlue();
 
             telemetry.update();
         }

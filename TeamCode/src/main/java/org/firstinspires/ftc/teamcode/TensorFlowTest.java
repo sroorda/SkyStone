@@ -74,7 +74,7 @@ public class TensorFlowTest extends LinearOpMode {
 
         if (opModeIsActive()) {
 
-            du.tensorFlow();
+            du.tensorFlowBlue();
             sleep(500000);
 
 

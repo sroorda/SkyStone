@@ -26,7 +26,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -34,8 +33,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
-@TeleOp(name = "Sensor: REV2mDistance", group = "Sensor")
-@Disabled
+@TeleOp(name = "Test 2Meter Sensors", group = "Sensor")
+//@Disabled
 public class CoachW2mDistCalc extends LinearOpMode {
 
     private DistanceSensor leftSensor;
@@ -65,20 +64,20 @@ public class CoachW2mDistCalc extends LinearOpMode {
             leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
             rightSensorDist = rightSensor.getDistance(DistanceUnit.CM);
 
-            if((leftSensorDist > 50) || (rightSensorDist > 50)) {
+            /*if((leftSensorDist > 50) || (rightSensorDist > 50)) {
 
             }
             else {
                 oppositeDist = rightSensorDist - leftSensorDist;
                 surfaceAngle = Math.toDegrees(Math.atan(oppositeDist/adjacentDist));
 
-            }
+            }*/
 
-            telemetry.addData("opp", String.format("%.01f cm", oppositeDist));
-            telemetry.addData("adj", String.format("%.01f cm", adjacentDist));
+            //telemetry.addData("opp", String.format("%.01f cm", oppositeDist));
+            //telemetry.addData("adj", String.format("%.01f cm", adjacentDist));
             telemetry.addData("L range", String.format("%.01f cm", leftSensorDist));
             telemetry.addData("R range", String.format("%.01f cm", rightSensorDist));
-            telemetry.addData("  angle", String.format("%.01f deg", surfaceAngle));
+            //telemetry.addData("  angle", String.format("%.01f deg", surfaceAngle));
 
 
 

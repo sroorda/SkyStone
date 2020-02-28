@@ -33,10 +33,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
-@Autonomous(name="CoachWTestAuto", group="Linear Opmode")
+@Autonomous(name="SkystoneAutoParkBlue", group="Linear Opmode")
 
-public class CoachWrightAutoTests extends LinearOpMode {
-    public final static double SPEED = 0.75;
+public class SkystoneAutoParkBlue extends LinearOpMode {
+    public final static double SPEED = .75;
     public void runOpMode() {
         telemetry.addData("Status", "Initialized v14");
         telemetry.update();
@@ -49,68 +49,49 @@ public class CoachWrightAutoTests extends LinearOpMode {
         du.moveIntake(0.5);
 
         if (opModeIsActive()) {
-
-            //du.angleCorrectIMU(-90);
-            //du.rotateTest(80);
-            double starTime = getRuntime();
-            //
-            du.rotateViaIMUToAngle(-92);
-            //du.moveWithEncoder(200,1, false);  // POSITION foundation delivery 1
-            //DistanceSensor leftSensor;
-            //leftSensor = hardwareMap.get(DistanceSensor.class, "rightSensor");
-            //double leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
-            //telemetry.addData("L range", String.format("%.01f cm", leftSensorDist));
-
-            telemetry.addData("Rotate time", (getRuntime()-starTime));
-            telemetry.update();
-            /*double foundationDelivery1 = 0;
+            double foundationDelivery1 = 0;
             double quarry = 0;
             double foundationDelivery2 = 0;
 
 
-            du.moveWithEncoder(28, 1, false);
+            du.moveWithEncoder(19, 0.5, false);
             sleep(200);
-            int position = du.tensorFlow();
+            int position = du.tensorFlowBlue();
 
-            //systone recognition code
+            //skystone recognition code
             if (position == 1){
                 // Move forward to line up with the block
-                du.log("BEFORE", "Move to Stone");
-                du.moveWithEncoder(51, 1, true);
+                du.strafeLeftDistance(21,0.3,false); //here
 
-                foundationDelivery1 = 170;
+                foundationDelivery1 = 190; //flip with 1
                 quarry = -230;
                 foundationDelivery2 = 230;
             }
             else if (position == 2){
                 // Strafe to the second block
-                du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(22,0.3,true);
-                du.log("BEFORE ANGLE CORRECT", "Angle correct before grab");
-                //du.angleCorrect();
-                du.angleCorrectIMU(0);
-                // Move forward to line up with the block
-                du.log("BEFORE", "Grab stone");
-                du.moveWithEncoder(40, 1, false);
+                du.log("BEFORE MOVE TO STONE", "Move to stone");
 
-                foundationDelivery1 = 40;//200;
+                foundationDelivery1 = 220; //flip with 2
                 quarry = -260;
                 foundationDelivery2 = 233;
             }
             else{
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(44,1,true);
+                du.strafeRightDistance(21,.3,false); // here
 
                 // Move forward to line up with the block
-                du.log("BEFORE", "Grab stone");
-                du.moveWithEncoder(51, 1, true);
+
 
                 foundationDelivery1 = 235;
                 quarry = -265;
                 foundationDelivery2 = 265;
             }
 
+            //du.rotateViaIMUToAngle(-2);
+            du.log ("AngleOff","" + du.getAngle());
+            du.log("BEFORE", "Grab stone");
+            du.moveWithEncoder(41, SPEED, false);
 
 
             // Drop the claw to move the block
@@ -123,24 +104,61 @@ public class CoachWrightAutoTests extends LinearOpMode {
 
             // Move backwards
             du.log("BEFORE", "Move backwards after we grab block");
-            du.moveWithEncoder(-18,SPEED); //coach
+            du.moveWithEncoder(15,-SPEED);
 
-            //strafe towards foundation
-            du.log("BEFORE", "Strafe towards foundation");
-            du.rotate(-67, .5); //coach
-            du.log("BEFORE", "angle correct imu 2");
-            du.angleCorrectIMU(90);
+            //turn and move towards foundation
+            du.log("BEFORE", "Move towards foundation");
+            du.rotateViaIMUToAngle(-92);
             du.moveWithEncoder(foundationDelivery1,1, false);  // POSITION foundation delivery 1
-     /*
-            du.rotate(67,0.5);
 
             // Raise linear slide
-            du.moveLinearSlideWithRunUsingEncoders(15); //coach
+            du.moveLinearSlideWithRunUsingEncoders(13);
+            du.rotateViaIMUToAngle(-2);
 
-            // Move forward towards foundation
+            du.moveForwardToFoundation();
             du.log("BEFORE", "Move forward towards foundation");
-            du.moveWithEncoder(20, 0.5); //coach
 
+            //place stone in foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+
+            sleep(300);
+            du.moveLinearSlideWithRunUsingEncodersDown(13);
+            du.moveIntake(DriveUtility.CLAW_OPEN);
+
+            //move foundation into building zone
+            du.log("BEFORE", "Rotate slowly a little");
+            du.rotateLeft(500, 0.3);
+
+            //move backwards to the wall
+            du.log("BEFORE", "Move backwards to wall");
+            du.moveWithEncoder(75, -SPEED);
+
+            //rotate right to rotate foundation
+            du.log("BEFORE", "Rotate right to rotate foundation");
+            du.rotateLeft(1500, 0.4);
+            //sleep(300);
+
+            //move forward and push foundation against wall
+            du.log("BEFORE", "Move forward and push foundation against wall");
+            du.moveWithEncoder(100,SPEED);
+
+            //open the foundation claws so we let go of the foundation
+            du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
+            //sleep(300);
+
+            //strafe left to park in the spot closest to the middle bridge
+            du.log("BEFORE", "Strafe left to line up park");
+            du.strafeRightDistance(50, SPEED, true);
+
+            //move backwards half way
+            du.log("BEFORE", "Move backwards half way");
+            du.moveWithEncoder(47.5, -SPEED, false);
+
+            //back up the rest of the way
+            du.log("BEFORE", "Back up under the bridge");
+            du.moveWithEncoder(63, -SPEED, true);
+
+ /*
             // Drop stone in foundation
             du.moveIntake(DriveUtility.CLAW_OPEN);
 
@@ -149,7 +167,7 @@ public class CoachWrightAutoTests extends LinearOpMode {
 
             //lower linear slide
             du.moveLinearSlideWithRunUsingEncodersDown(13);
-
+/*
             //turn and move forward to second stone
             du.rotate(-67, 0.5);
             du.log("BEFORE", "ANGLE CORRECT");

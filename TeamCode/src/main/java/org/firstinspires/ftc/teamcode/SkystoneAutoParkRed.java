@@ -54,9 +54,9 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             double foundationDelivery2 = 0;
 
 
-            du.moveWithEncoder(19, SPEED, false);
+            du.moveWithEncoder(19, 0.5, false);
             sleep(200);
-            int position = du.tensorFlow();
+            int position = du.tensorFlowRed();
 
             //skystone recognition code
             if (position == 1){
@@ -94,7 +94,7 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             //du.rotateViaIMUToAngle(-2);
             du.log ("AngleOff","" + du.getAngle());
             du.log("BEFORE", "Grab stone");
-            du.moveWithEncoder(39, SPEED, false);
+            du.moveWithEncoder(41, SPEED, false);
 
 
             // Drop the claw to move the block
