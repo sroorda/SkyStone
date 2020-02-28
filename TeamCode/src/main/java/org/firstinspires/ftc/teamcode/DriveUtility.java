@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.graphics.Bitmap;
+import android.hardware.Sensor;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -304,6 +305,23 @@ public class DriveUtility {
 */
 
         runMotorsUntilPositionRampSpeed(speed, 0, 0, fullSpeed, roundedDistance, STATE_MOVE);
+    }
+
+    public void moveForwardToFoundation() {
+        for(DcMotor m : motorList ) {
+            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        double distance = rightSensor.getDistance(DistanceUnit.CM);
+        log("moveForwardToFoundation", "initial: " + distance);
+        while(opMode.opModeIsActive() && distance <= 80) {
+            setMotorSpeeds(1, 0.3, 0.3, -0.3, -0.3);
+            distance = rightSensor.getDistance(DistanceUnit.CM);
+            log("moveForwardToFoundation", "loop: " + distance);
+        }
+        setMotorSpeeds(0, 0,0,0 ,0);
     }
 
     public void strafeRightDistance(double distance, double speed) {
@@ -611,9 +629,12 @@ public class DriveUtility {
         double angleError = 0;
         double pTerm = 0;
         double cumulativeAngleError = 0;
+        double percentToTarget = reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight);
+        double speedFactorToSend = speedFactor;
 
-        while( opMode.opModeIsActive() && !reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight)) {
+        while( opMode.opModeIsActive() && percentToTarget <= 1) {
             double angle = getAngle();
+            percentToTarget = reachedDistance(targetDistance, backLeft, frontLeft, backRight, frontRight);
 
             if( moveState != STATE_MOVE ) {
                 angleError = angle - centerAngle;
@@ -630,28 +651,6 @@ public class DriveUtility {
                 }
 
 
-
-
-                /* if (angle > centerAngle) {
-                    // increase the back wheel power and decrease the front wheel power
-                    if (moveState == STATE_STRAFE_RIGHT) {
-                        backCorrection = backCorrection* (1 - angleCorrect);
-                        frontCorrection = frontCorrection * (1 + angleCorrect);
-                    } else if (moveState == STATE_STRAFE_LEFT ){
-                        backCorrection = backCorrection * (1 + angleCorrect);
-                        frontCorrection = frontCorrection * (1 - angleCorrect);
-                    }
-                } else if (angle < centerAngle) {
-                    // decrease the back wheel power and increase the front wheel power
-                    if (moveState == STATE_STRAFE_RIGHT) {
-                        backCorrection = backCorrection * (1 + angleCorrect);
-                        frontCorrection = frontCorrection * (1 - angleCorrect);
-                    } else if (moveState == STATE_STRAFE_LEFT){
-                        //
-                        backCorrection = backCorrection * (1 - angleCorrect);
-                        frontCorrection = frontCorrection * (1 + angleCorrect);
-                    }
-                } */
             }
             //log("Angle", "" + angle);
             //log("Correction value", backCorrection + ", " + frontCorrection);
@@ -665,7 +664,25 @@ public class DriveUtility {
                 speedFactor += AMOUNT_INCREASED;
             }
 
-            setMotorSpeeds(speedFactor, flPower, blPower, frPower, brPower);
+            if (moveState == STATE_MOVE) {
+
+                if(percentToTarget <= 0.5) {
+                    speedFactorToSend = speedFactor;
+                }
+                else if(percentToTarget > 0.5) {
+                    speedFactorToSend = (1-percentToTarget);
+                }
+                if(speedFactorToSend < 0.3) {
+                    speedFactorToSend = 0.3;
+                }
+            }
+            else {
+                speedFactorToSend = speedFactor;
+            }
+
+            log("[runMotorsUntilPositionRampSpeed] toTarget",""+percentToTarget);
+            log("[runMotorsUntilPositionRampSpeed] SF",""+speedFactorToSend);
+            setMotorSpeeds(speedFactorToSend, flPower, blPower, frPower, brPower);
             //opMode.sleep(50);
             opMode.idle();
             //log("busy:", backLeft.isBusy() + "," + frontLeft.isBusy()+ "," + backRight.isBusy()+ "," + frontRight.isBusy());
@@ -712,13 +729,18 @@ public class DriveUtility {
         return total > ENCODERS_CLOSE_ENOUGH;
     }
 
-    private boolean reachedDistance(double targetDistance, DcMotor...ms) {
+    // What is it returning: percent away from target distance
+    // What does it do: calculates the average target distance, takes the average + fudge factor, and divides by the target distance
+
+    private double reachedDistance(double targetDistance, DcMotor...ms) {
         double total = 0;
         for(DcMotor m: ms) {
             total += Math.abs(m.getCurrentPosition());
         }
         double average = total / 4;
-        return (average + ENCODERS_CLOSE_ENOUGH >= Math.abs(targetDistance));
+        double percent = (average + ENCODERS_CLOSE_ENOUGH) / Math.abs(targetDistance);
+        return percent;
+        //return (average + ENCODERS_CLOSE_ENOUGH >= Math.abs(targetDistance));
     }
 
     private boolean averageBusy(DcMotor...ms) {
@@ -927,6 +949,12 @@ public class DriveUtility {
         //telemetry.addData("R range", String.format("%.01f cm", rightSensorDist));
         //telemetry.addData("  angle", String.format("%.01f deg", surfaceAngle));
 
+    }
+
+    public double distanceFromWall() {
+        double leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
+        // 122 CM is 4 feet (each tile is 2 feet wide, and there are 2)
+        return 122 - leftSensorDist;
     }
 
     public void sensorCorrection( double speed, double fudgeAngle, long timeToRotate) {

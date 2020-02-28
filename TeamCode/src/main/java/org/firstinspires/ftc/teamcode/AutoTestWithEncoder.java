@@ -62,48 +62,11 @@ public class AutoTestWithEncoder extends LinearOpMode {
         DriveUtility du = new DriveUtility(hardwareMap, telemetry, this);
         //////////////////////////////////////////////////////////////////////////////
         waitForStart();
-
         double opmodeAngle = 0;
-        while (opModeIsActive()) {
-            du.moveWithEncoder(100, 0.3, true);
-            sleep(1000);
-            du.moveWithEncoder(100, -0.3, true);
-            sleep(1000);
-            du.strafeLeftDistance(100, 0.3, true);
-            sleep(1000);
-            du.strafeRightDistance(100, 0.3, true);
-/*
-            du.setMotorSpeeds(1, 0.3, 0, 0, 0);
-            sleep(1000);
-            du.setMotorSpeeds(1, 0, 0.3, 0, 0);
-            sleep(1000);
-            du.setMotorSpeeds(1, 0, 0, 0.3, 0);
-            sleep(1000);
-            du.setMotorSpeeds(1, 0, 0, 0, 0.3);
-            sleep(1000);
+        if (opModeIsActive()) {
 
-/*
-            opmodeAngle = du.distSensorsAngle();
-            telemetry.addData("  angle", String.format("%.01f deg", opmodeAngle));
+            du.moveForwardToFoundation();
 
-
-            leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
-            rightSensorDist = rightSensor.getDistance(DistanceUnit.CM);
-
-            if ((leftSensorDist > 50) || (rightSensorDist > 50)) {
-
-            } else {
-                oppositeDist = rightSensorDist - leftSensorDist;
-                surfaceAngle = Math.toDegrees(Math.atan(oppositeDist / adjacentDist));
-
-            }
-
-            telemetry.addData("opp", String.format("%.01f cm", oppositeDist));
-            telemetry.addData("adj", String.format("%.01f cm", adjacentDist));
-            telemetry.addData("L range", String.format("%.01f cm", leftSensorDist));
-            telemetry.addData("R range", String.format("%.01f cm", rightSensorDist));
-            telemetry.addData("  angle", String.format("%.01f deg", surfaceAngle));
-*/
             telemetry.update();
         }
     }

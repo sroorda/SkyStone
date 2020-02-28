@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 @Autonomous(name="SkystoneAutoParkRed", group="Linear Opmode")
 
 public class SkystoneAutoParkRed extends LinearOpMode {
-    public final static double SPEED = .5;
+    public final static double SPEED = .75;
     public void runOpMode() {
         telemetry.addData("Status", "Initialized v14");
         telemetry.update();
@@ -54,28 +54,27 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             double foundationDelivery2 = 0;
 
 
-            du.moveWithEncoder(28, SPEED, false);
+            du.moveWithEncoder(19, SPEED, false);
             sleep(200);
             int position = du.tensorFlow();
 
-            //systone recognition code
+            //skystone recognition code
             if (position == 1){
                 // Move forward to line up with the block
 
-                foundationDelivery1 = 200;
+                foundationDelivery1 = 190;
                 quarry = -230;
                 foundationDelivery2 = 230;
             }
             else if (position == 2){
                 // Strafe to the second block
                 du.log("BEFORE STRAFE LEFT", "Move to stone");
-                du.strafeLeftDistance(22,0.3,false);
+                du.strafeLeftDistance(21,0.3,false);
 
                 // Move forward to line up with the block
                 du.log ("AngleOff","" + du.getAngle());
 
-
-                foundationDelivery1 = 200;
+                foundationDelivery1 = 220;
                 quarry = -260;
                 foundationDelivery2 = 233;
             }
@@ -91,9 +90,11 @@ public class SkystoneAutoParkRed extends LinearOpMode {
                 quarry = -265;
                 foundationDelivery2 = 265;
             }
+
+            //du.rotateViaIMUToAngle(-2);
             du.log ("AngleOff","" + du.getAngle());
             du.log("BEFORE", "Grab stone");
-            du.moveWithEncoder(45, SPEED, false);
+            du.moveWithEncoder(39, SPEED, false);
 
 
             // Drop the claw to move the block
@@ -108,21 +109,21 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             du.log("BEFORE", "Move backwards after we grab block");
             du.moveWithEncoder(14,-SPEED);
 
-            //strafe towards foundation
-            du.log("BEFORE", "Strafe towards foundation");
-            du.rotateViaIMUToAngle(90);
-            du.moveWithEncoder(foundationDelivery1,SPEED, false);  // POSITION foundation delivery 1
+            //turn and move towards foundation
+            du.log("BEFORE", "Move towards foundation");
+            du.rotateViaIMUToAngle(88);
+            du.moveWithEncoder(foundationDelivery1,1, false);  // POSITION foundation delivery 1
 
             // Raise linear slide
             du.moveLinearSlideWithRunUsingEncoders(13);
-            du.rotateViaIMUToAngle(0);
+            du.rotateViaIMUToAngle(-2);
 
-            // Move forward towards foundation
+            du.moveForwardToFoundation();
             du.log("BEFORE", "Move forward towards foundation");
-            du.moveWithEncoder(17, SPEED);
 
             //place stone in foundation
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_CLOSE);
+
             sleep(300);
             du.moveLinearSlideWithRunUsingEncodersDown(13);
             du.moveIntake(DriveUtility.CLAW_OPEN);
@@ -148,13 +149,13 @@ public class SkystoneAutoParkRed extends LinearOpMode {
             du.moveLeftClawAndRightClaw(DriveUtility.FOUNDATION_CLAW_OPEN);
             //sleep(300);
 
-            //move backwards half way
-            du.log("BEFORE", "Move backwards half way");
-            du.moveWithEncoder(47.5, -SPEED, false);
-
             //strafe left to park in the spot closest to the middle bridge
             du.log("BEFORE", "Strafe left to line up park");
             du.strafeLeftDistance(50, SPEED, true);
+
+            //move backwards half way
+            du.log("BEFORE", "Move backwards half way");
+            du.moveWithEncoder(47.5, -SPEED, false);
 
             //back up the rest of the way
             du.log("BEFORE", "Back up under the bridge");

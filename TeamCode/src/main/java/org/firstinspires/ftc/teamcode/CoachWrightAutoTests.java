@@ -31,6 +31,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 @Autonomous(name="CoachWTestAuto", group="Linear Opmode")
@@ -53,7 +56,14 @@ public class CoachWrightAutoTests extends LinearOpMode {
             //du.angleCorrectIMU(-90);
             //du.rotateTest(80);
             double starTime = getRuntime();
-            du.rotateViaIMUToAngle(90);
+            //
+            // du.rotateViaIMUToAngle(90);
+            //du.moveWithEncoder(200,1, false);  // POSITION foundation delivery 1
+            DistanceSensor leftSensor;
+            leftSensor = hardwareMap.get(DistanceSensor.class, "rightSensor");
+            double leftSensorDist = leftSensor.getDistance(DistanceUnit.CM);
+            telemetry.addData("L range", String.format("%.01f cm", leftSensorDist));
+
             telemetry.addData("Rotate time", (getRuntime()-starTime));
             telemetry.update();
             /*double foundationDelivery1 = 0;
